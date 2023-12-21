@@ -21,7 +21,7 @@ __After the environment configuration, usually several hours are needed to finis
 
 python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
 
-(whether to use the pre-trained CG graph encoder checkpoint can be directly specifiied by 'model_checkpoint' arugment in above yaml file, if not, excuating training-from-scratch)
+(whether to use the pre-trained CG graph encoder checkpoint can be directly specifiied by the 'model_checkpoint' arugment in above yaml file, if not, excuating training-from-scratch)
 
 __The complete MCGLPPI framework, including the CG geometer parameter generation code, CG pre-training scripts, evaluation scripts of other downstream datasets, all mentioned source data files, and other supporting scripts/materials will be released upon acceptance.__
 
