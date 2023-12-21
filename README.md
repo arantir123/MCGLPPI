@@ -1,2 +1,2 @@
 # MCGLPPI
-Demo cdoe for MCGLPPI
+Demo code for MCGLPPI
