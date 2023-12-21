@@ -11,16 +11,17 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 ## Quick start ##
 
-__We have provided our pre-processed CG source data pickle files (including the pretraining and downstream S4169 datasets, etc.) in downstream_files/PDBBIND for a quick start.__ 
+__We have provided our pre-processed CG source data pickle file (in downstream_files/PDBBIND), pre-trained CG graph encoder (in pretrained_cgmodels), and corresponding demo running scripts (based on PDBbind) for a quick start.__ 
 
-Step1. __Download our pre-processed jsonl files in above link, and put it into the ./data/ folder as the source data file.__
+__Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to set the hyper-parameters for the downstream evaluation configurations (supporting training-from-scratch or fine-tuning from the pre-trained checkpoint).__
 
-Step2. __Follow the illustration in \_4_run_MpbPPI_ddg_prediction.py, to read the above jsonl file and run&evaluate MpbPPI for downstream ddG predictions in two different data splitting ways (for pre-training, the procedure is similar based on the \_4_run_pretraining_MpbPPI_aadenoising_rgraph.py script).__
+__A running example (including the training and evaluation to create the similar results reported):__
 
-__A running example (including the training and evaluation to create the similar results reported in the manuscript):__
+__After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results could slightly vary according to the actual installed virtual environment and the supporting hardware.__
 
-__After the environment configuration, usually several hours are needed to finish running the demo code.__
+python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml (whether to use the pre-trained CG graph encoder checkpoint can be directly specifiied by 'model_checkpoint' arugment in above yaml file, if not, adopting training-from-scratch)
 
-python \_4_run_MpbPPI_ddg_prediction.py --data_split_mode 'CV10_random' (mutation-level tenfold cross-validation)
+__The complete MCGLPPI framework, including the CG geometer parameter generation code, CG pre-training scripts, evaluation scripts of other downstream datasets, all mentioned source data files, and other supporting scripts/materials will be released upon acceptance.__
 
-python \_4_run_MpbPPI_ddg_prediction.py --data_split_mode 'complex' (wide-type PPI complex type-based cross-validation)
+
+
