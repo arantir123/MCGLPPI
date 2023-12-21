@@ -19,7 +19,7 @@ __A running example (including the training and evaluation to create the similar
 
 __After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results could slightly vary according to the actual installed virtual environment and the supporting hardware.__
 
-python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml 
+python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
 
 (whether to use the pre-trained CG graph encoder checkpoint can be directly specifiied by 'model_checkpoint' arugment in above yaml file, if not, excuating training-from-scratch)
 
