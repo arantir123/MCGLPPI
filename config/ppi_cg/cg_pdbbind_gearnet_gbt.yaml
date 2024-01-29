@@ -11,7 +11,7 @@ dataset:
   output_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/MCGLPPI/downstream_files/PDBBIND/
 
   # the path for storing the index of dataset splitting
-  index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed512.jsonl
+  index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl
 
   # the path for storing all label information of current dataset
   label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/MCGLPPI/downstream_files/PDBBIND/PDBBIND.csv
