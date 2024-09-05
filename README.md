@@ -1,6 +1,8 @@
 # MCGLPPI
 ### The demo code of implementation of MCGLPPI
 
+__Original bioRxiv version link: https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract
+
 __Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
 * Python 3.9.18
 * Pytorch 1.12.1
