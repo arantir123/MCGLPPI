@@ -13,7 +13,15 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 ## Quick start ##
 
-__We have provided our pre-processed CG source data pickle file (in downstream_files/PDBBIND), pre-trained CG graph encoder (in pretrained_cgmodels), and corresponding running script demos (based on the PDBbind) for a quick start.__ 
+__We have provided:__ 
+
+__(1) our pre-processed CG source data pickle file (in downstream_files/PDBBIND)
+
+__(2) pre-trained CG graph encoder (in pretrained_cgmodels):__
+
+cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+
+__(3) corresponding running script demos (based on the PDBbind) for a quick start.__ 
 
 __Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
 
