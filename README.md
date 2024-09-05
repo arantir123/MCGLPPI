@@ -50,7 +50,7 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 __We have provided:__
 
-__(1) our pre-processed CG source data pickle file,__
+__(1) our pre-processed CG source data pickle file (in the following link),__
 
 https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
@@ -60,7 +60,17 @@ cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_
 
 __(3) corresponding running script demos for a quick start.__ 
 
-__The complete MCGLPPI++ framework will be released upon acceptance.__
+__Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
+
+__A running example (including the training and evaluation to create the similar results reported):__
+
+__After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results could slightly vary according to the actual installed virtual environment and the supporting hardware.__
+
+python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
+
+(whether to use the pre-trained CG graph encoder checkpoint can be directly specified by the 'model_checkpoint' argument in above yaml file, if not, excuating training-from-scratch)
+
+__The complete MCGLPPI++ framework, including complete original data and implementation scripts, will be released upon acceptance.__
 
 
 
