@@ -17,7 +17,7 @@ __We have provided:__
 
 __(1) our pre-processed CG source data pickle file (in downstream_files/PDBBIND),__
 
-__(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name):__
+__(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
 cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
@@ -50,11 +50,11 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 __We have provided:__
 
-__(1) our pre-processed CG source data pickle file (in the following link):__
+__(1) our pre-processed CG source data pickle file (in the following link),__
 
 https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
-__(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name):__
+__(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
 cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 
