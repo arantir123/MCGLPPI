@@ -48,15 +48,17 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 ## Quick start ##
 
-__We have provided our pre-processed CG source data pickle file:__
+__We have provided:__
+
+__(1) our pre-processed CG source data pickle file,__
 
 https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
-__Pre-trained CG graph encoder (in pretrained_cgmodels):__
+__(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
 cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-__And corresponding running script demos for a quick start.__ 
+__(3) corresponding running script demos for a quick start.__ 
 
 __The complete MCGLPPI++ framework will be released upon acceptance.__
 
