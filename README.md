@@ -27,7 +27,7 @@ __Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to
 
 __A running example (including the training and evaluation to create the similar results reported):__
 
-__After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results could slightly vary according to the actual installed virtual environment and the supporting hardware.__
+__After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
 python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
 
@@ -60,15 +60,13 @@ cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_
 
 __(3) corresponding running script demos for a quick start.__ 
 
-__Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
+__Please follow the illustration in config/ppi_cg_maml/cg_maml_gearnet_reg.yaml to set the hyper-parameters for the downstream evaluation configurations.__
 
-__A running example (including the training and evaluation to create the similar results reported):__
+__A running example:__
 
-__After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results could slightly vary according to the actual installed virtual environment and the supporting hardware.__
+__After the environment configuration, usually donzens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
-python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
-
-(whether to use the pre-trained CG graph encoder checkpoint can be directly specified by the 'model_checkpoint' argument in above yaml file, if not, excuating training-from-scratch)
+python cg_maml_steps/cg_downstream_1gpu_maml_reg.py -c config/ppi_cg_maml/cg_maml_gearnet_reg.yaml  
 
 __The complete MCGLPPI++ framework, including complete original data and implementation scripts, will be released upon acceptance.__
 
