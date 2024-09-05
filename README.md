@@ -15,7 +15,7 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 __We have provided:__ 
 
-__(1) our pre-processed CG source data pickle file (in downstream_files/PDBBIND)
+__(1) our pre-processed CG source data pickle file (in downstream_files/PDBBIND)__
 
 __(2) pre-trained CG graph encoder (in pretrained_cgmodels):__
 
