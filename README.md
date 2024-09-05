@@ -1,7 +1,7 @@
 # MCGLPPI
 ### The demo code of implementation of MCGLPPI
 
-__Original bioRxiv version link: https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract
+__Original bioRxiv version link: https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract__
 
 __Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
 * Python 3.9.18
@@ -26,6 +26,19 @@ python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearn
 (whether to use the pre-trained CG graph encoder checkpoint can be directly specified by the 'model_checkpoint' argument in above yaml file, if not, excuating training-from-scratch)
 
 __The complete MCGLPPI framework, including the CG geometer parameter generation code, CG pre-training scripts, evaluation scripts of other downstream datasets, all mentioned source data files, and other supporting scripts/materials will be released upon acceptance.__
+
+# MCGLPPI++
+### The demo code of implementation of MCGLPPI++
+
+__Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
+* Python 3.9.18
+* Pytorch 1.12.1
+* CUDA tool kit 11.3.1
+* Pytorch Geometric (PyG) for PyTorch 1.12.* and CUDA 11.3
+* Pytorch-scatter 2.1.0
+* Torchdrug 0.2.1
+
+__The complete MCGLPPI++ framework will be released upon acceptance.__
 
 
 
