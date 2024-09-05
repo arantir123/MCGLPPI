@@ -99,7 +99,7 @@ task:
 optimizer:
   # class: AdamW
   class: Adam
-  lr: 1.0e-3 # 1.0e-2/1.0e-3/5.0e-4, this learning rate is used for updating the prime model in outer loops of MAML
+  lr: 1.0e-3 # this learning rate is used for updating the prime model in outer loops of MAML
   # weight_decay: 1.0e-4
 
 scheduler:
