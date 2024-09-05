@@ -1,0 +1,171 @@
+output_dir: downstream_cgmodels/cg_MAML/
+
+dataset:
+  class: MAMLDataset
+
+  # the path for storing the downstream source data
+  data_path: /maml/ # MAML path in server
+
+  # the path for storing the output processed pickle file
+  output_path: /maml/
+
+  # the path for storing the index of dataset splitting
+  index_path: /downstream_files/metatrain_tcrpmhc_seed-0_crit-ss_cnum-10.pkl # ss
+
+  # the path for storing all label information of current dataset
+  label_path: /downstream_files/MAML/MAML_complete_index.csv
+
+  # indicating current used data source pickle file (creating it if it does not exist)
+  pickle_name: cg_complete_maml_energyinject.pkl.gz
+
+  # * currently no transform functions are needed, the node and edge features can be generated in task.forward and CG22_GraphConstruction separately *
+  label_col_name: binding_free_energy # choose the specified column in label file as the final used label
+  cropping_threshold: 10 # the cropping function is performed on-the-fly
+  contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
+  test_set_id: [-1] # specify a list of clusters from the pre-defined cluster set as the meta-test set (-1: represent the last cluster)
+
+  k_shot: 5 # k_shot for the S set of meta-training (used in Sampler), should be smaller than the minimum task sample number among training tasks
+  k_query: 10 # k_query for the Q set of meta-training, used in Sampler, determining how many samples will be used for each Q set
+  val_shot: 10 # val_shot for meta-test, used in Sampler, in zero-shot setting, determining how many samples will be checked per batch
+  
+  random_shuffle_seed: 128 # provide a temporary random seed to control the sample output order in test set (None: original order based on names)
+  
+  # * if unified_sample_num exists, Train_balanced_FewshotBatchSampler which balances sample number of each task is used (otherwise: no sample balance) *
+  # * when it exists, if set it to None, the average sample number over all meta-training tasks is used otherwise the specified int value *
+  # unified_sample_num: 1.0
+  
+  # query_min is used to ensure the minimum sample number for each Q set (usually should be a value larger than 2 if using Batch Normalization),
+  # i.e., discard remained samples for a task (for which supported Q set < query_min), after complete k_shot S set + k_query Q set sampling in meta-training
+  query_min: 2
+
+task:
+  class: MAML
+  angle_enhance: True
+  normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
+
+  # the hyperparameters for MLP-based decoder
+  num_mlp_layer: 3
+  mlp_batch_norm: True
+  mlp_dropout: 0.5
+
+  # energy parameters (only valid when energy_inject=True)
+  energy_inject: True
+  vdw_radius_coef: 0.2 # adjust the original vdw radii provided by MARTINI, i.e., [old - 1 * self.vdw_radius_coef, old + 1 * self.vdw_radius_coef], e.g., 4.7-0.2
+  energy_shortcut: True # True: prediction = MLP(graph_emb) + MLP(energy), False: prediction = MLP(energy)
+
+  whether_ES: True # True: also incorporate electrostatic term into energy calculation
+  whether_der: False # whether to use derivatives to rectify the potential energy curve
+  # der_cal_across_protein: False # whether to use the derivative loss calculated protein/sample-wise (True: protein/sample-wise, False: atom-wise)
+  # loss_der1_ratio: 100 # works under whether_der == True
+  # loss_der2_ratio: 100 # works under whether_der == True
+  
+  whether_prompt: False # whether to use extra trainable graph prompts to be injected into each protein graph
+
+  model:
+    class: CG22_GearNetIEConv
+    input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
+    # input_dim: 17 # bead type number
+    hidden_dims: [256, 256, 256, 256, 256, 256]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: sum
+    # num_relation: 1 # original relation number (only containing radius edges)
+    num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+    edge_input_dim: 53 # cg22_gearnet: 46 + num_relation
+    # edge_input_dim: 59 # gearnet: 52 + num_relation
+    num_angle_bin: 8
+    # extra hyperparameter for GearNetIEConv-based models:
+    embedding_dim: 256 # extra linear embedding layer
+    # layer_norm: True
+    # dropout: 0.2
+    # use_ieconv: True
+
+  graph_construction_model:
+    class: CG22_GraphConstruction
+    edge_layers:
+      # - class: SpatialEdge
+        # radius: 4.5
+        # min_distance: 0
+      - class: AdvSpatialEdge
+        radius: 5 # empirically, martini2.2 based edge cutoff can also be tried starting from 4A~5A
+        min_distance: 0
+        across_res_mask: True # distinguish whether bead nodes are across two residues or not
+        cg_edge_enhance: True # enhance the radius edge with CG defined edges
+        cg_edge_reduction: False # whether to remove the duplicate CG edges on the top of the radius edges
+    # edge_feature: gearnet
+    edge_feature: cg22_gearnet # input attribute of initialization function of CG22_GraphConstruction
+
+optimizer:
+  # class: AdamW
+  class: Adam
+  lr: 1.0e-3 # 1.0e-2/1.0e-3/5.0e-4, this learning rate is used for updating the prime model in outer loops of MAML
+  # weight_decay: 1.0e-4
+
+scheduler:
+# option 1:
+  class: StepLR
+  step_size: 10
+  gamma: 0.5
+# option 2:
+#   class: ReduceLROnPlateau
+#   mode: min
+#   factor: 0.6
+#   patience: 5
+# option 3:
+#   class: CosineAnnealingLR
+#   eta_min: 5.0e-6
+#   # another necessary parameter Tmax (maximum number of iterations) is defined inside the script
+#   # default: cfg.scheduler.T_max = 4 * cfg.train.iterations
+
+engine:
+  gpus: [0]
+  # batch size defines how many tasks will be sampled each batch (rather than how many samples)
+  batch_size: 4
+  num_worker: 0
+
+# model_checkpoint: {{ ckpt }}
+# diffusion denoising pretraining:
+# 1. pure encoder checkpoint
+# model_checkpoint: /pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+model_checkpoint: /pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
+# 2. checkpoint after supervised learning (including encoder and decoder)
+# whether_from_supervise: True
+# only_supervise_encoder: True # load the pre-trained encoder through supervised learning, and initialize a new decoder to be learnt from meta-learning for further fine-tuning 
+# model_checkpoint: /downstream_files/MAML/downstream_model_storage/best_train_standard_seed0_bs64_epoch20_dim256_radius5_2024_07_16__00_25_56_extra_0.pth
+
+train:
+  fix_encoder: True
+  fix_encoder_few_finetuning: True # whether fix the encoder during the fine-tuning phase under few-shot case
+  num_epoch: 12 # 5/*12*/20/35/40, for specifying the MAML outer loop number
+  scheduler_pos: epoch # 'epoch'/'batch', controlling the scheduler update frequency
+
+  task_lr: 1.0e-4 # define the initial learning rate of MAML inner loops at the beginning of meta-training
+  num_inner_steps: 5 # 5, for specifying the MAML inner loop number for each task in a batch
+  
+  maml_param_optim: True # whether also to optimize the extra parameters provided in the MAML wrapper
+  weighted_task_comb: False # whether to weighted combine each task loss using the Attention module (otherwise: direct sum)
+  model_save_mode: direct # if set to 'direct', save the model in the last epoch specified
+
+  # 'zero' or 'few', representing using the zero-shot and few-shot test mode separately, for few-shot,
+  # argument 'val_shot' will be used to control the used basic test sample number for fine-tuning,
+  # otherwise (zero-shot) it just controls the sample number for each (no gradient) test batch
+  # for zero-shot, all samples in test tasks will be tested, while for few-shot, part of them will be used for fine-tuning on corresponding tasks
+  test_mode: few
+  # the following arguments are available under the test_mode 'few'
+  few_shot_num: 1 # controlling how many former 'val_shot'-based batches for each test task will be used for few-shot fine-tuning
+  few_epoch: 6
+  few_lr: 1.0e-4
+
+  # note that these hyperparameters are only used for train/test sets during model training, the final independent test set is not influenced by these
+  # train_time: 120
+  # test_time: 100
+
+  # the specified metric controlling the best model saved based on best-val
+  # {'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]')}
+  # eval_metric: root mean squared error [binding_affinity]
+  eval_metric: pearsonr [binding_affinity]
+
+# extra information attached to the saved model name
+# extra: subset # for GearNet-identified subset testing
+extra: 0 # for common testing case
