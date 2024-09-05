@@ -40,7 +40,7 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 ## Quick start ##
 
-__We have provided our pre-processed CG source data pickle file (in downstream_files/PDBBIND), pre-trained CG graph encoder (in pretrained_cgmodels), and corresponding running script demos (based on the PDBbind) for a quick start.__ 
+__We have provided our pre-processed CG source data pickle file (in https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing), pre-trained CG graph encoder (in pretrained_cgmodels), and corresponding running script demos for a quick start.__ 
 
 __The complete MCGLPPI++ framework will be released upon acceptance.__
 
