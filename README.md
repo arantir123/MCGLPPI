@@ -38,6 +38,10 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 * Pytorch-scatter 2.1.0
 * Torchdrug 0.2.1
 
+## Quick start ##
+
+__We have provided our pre-processed CG source data pickle file (in downstream_files/PDBBIND), pre-trained CG graph encoder (in pretrained_cgmodels), and corresponding running script demos (based on the PDBbind) for a quick start.__ 
+
 __The complete MCGLPPI++ framework will be released upon acceptance.__
 
 
