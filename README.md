@@ -64,7 +64,7 @@ __Please follow the illustration in config/ppi_cg_maml/cg_maml_gearnet_reg.yaml 
 
 __A running example:__
 
-__After the environment configuration, usually donzens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
+__After the environment configuration, usually dozens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
 python cg_maml_steps/cg_downstream_1gpu_maml_reg.py -c config/ppi_cg_maml/cg_maml_gearnet_reg.yaml  
 
