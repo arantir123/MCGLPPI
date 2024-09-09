@@ -287,7 +287,7 @@ class SiamDiff(tasks.Task, core.Configurable):
 
         # cumprod: torch.Tensor([1, 2, 3, 4, 5]) -> tensor([ 1., 2., 6., 24., 120.] (1，1×2，1×2×3，1×2×3×4，1×2×3×4×5)
         # alpha = 1 - beta, beta contains 100 values drawn from the same distribution (100 is the pre-defined noise level values, should also be the step number in original paper)
-        a_graph = self.alphas[noise_level]      # (num_graph,)
+        a_graph = self.alphas[noise_level] # (num_graph,)
         a_pos = a_graph[graph.node2graph]
         # print(a_graph, graph.node2graph, a_pos, a_graph.size(), graph.node2graph.size(), a_graph.size())
         # tensor([0.7373, 0.0063, 0.0119, 0.0837, 0.4252, 0.9934, 0.9948, 0.8674],
@@ -329,7 +329,7 @@ class SiamDiff(tasks.Task, core.Configurable):
         # struct_pred1 = self.eq_transform(struct_pred1, graph1)
         node_in, node_out = graph.edge_list.t()[:2]
         diff = graph.node_position[node_in] - graph.node_position[node_out]
-        dd_dr = diff / (diff.norm(dim=-1, keepdim=True) + 1e-10) #  # 经过normalize的原始边欧式距离
+        dd_dr = diff / (diff.norm(dim=-1, keepdim=True) + 1e-10) # 经过normalize的原始边欧式距离
         score_pos = scatter_mean(dd_dr * score_d.unsqueeze(-1), node_in, dim=0, dim_size=graph.num_node) \
                 + scatter_mean(- dd_dr * score_d.unsqueeze(-1), node_out, dim=0, dim_size=graph.num_node)
         return score_pos
@@ -399,7 +399,7 @@ class SiamDiff(tasks.Task, core.Configurable):
             # print(graph1.atom_feature, graph1.atom_feature.size()) # torch.Size([5710, 39])
 
             # print(graph1.num_residue, graph1.num_node) # tensor(723, device='cuda:0') tensor(5710, device='cuda:0')
-            graph1 = graph1.subgraph(node_mask) # *** this function seems not to influence the residue-level information under current setting ***
+            graph1 = graph1.subgraph(node_mask) # ** this function seems not to influence the residue-level information under current setting **
             # print(graph1.num_residue, graph1.num_node) # tensor(723, device='cuda:0') tensor(4268, device='cuda:0')
             # print(graph1.atom_feature, graph1.atom_feature.size()) # torch.Size([4268, 39])
             # *** retain the graph with unmasked atoms in which only atom_type (atom) node features are retained ***
