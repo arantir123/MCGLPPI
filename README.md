@@ -1,5 +1,5 @@
 # MCGLPPI
-### The demo code of implementation of MCGLPPI
+### Integration of molecular coarse-grained model into geometric representation learning framework for protein-protein complex property prediction 
 
 __Original bioRxiv version link: https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract__
 
@@ -10,6 +10,10 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 * Pytorch Geometric (PyG) for PyTorch 1.12.* and CUDA 11.3
 * Pytorch-scatter 2.1.0
 * Torchdrug 0.2.1
+
+## Steps about how to generate required data for model pre-training and model downstream predictions ##
+
+
 
 ## Quick start ##
 
