@@ -35,9 +35,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    https://drive.google.com/file/d/1S32LteGRSCCVPBM-Ig8MuVKibBMRqHiT/view?usp=sharing (for MARTINI3)
 
-   Please note that these zipped files contain 50,359 3DID (https://3did.irbbarcelona.org/) sample points covering 15,983 DDI structure templates. However, we remove any DDI templates from the 3DID dataset that   
-   are identical to those present in our downstream datasets, and 41,663 sample points are remained for the main experiments in the manuscript. Based on this, we further provide the parsed pickle file for these 
-   41,663 sample points (in which the original sample point names are included) for a quick start:
+   Please note that these zipped files contain 50,359 3DID (https://3did.irbbarcelona.org/) sample points covering 15,983 DDI structure templates. However, we remove any DDI templates from the 3DID dataset that are identical to those present in our downstream datasets, and 41,663 sample points are remained for the main experiments in the manuscript. Based on this, we further provide the parsed pickle file for these 41,663 sample points (in which the original sample point names are included) for a quick start:
 
    https://drive.google.com/file/d/1FACIyhD-Jn1J6MpN7KuiU-uXo_gxgxh7/view?usp=sharing (for MARTINI2)
 
