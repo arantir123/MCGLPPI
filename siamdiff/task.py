@@ -357,8 +357,9 @@ class SiamDiff(tasks.Task, core.Configurable):
         # the outer training loop is same to ordinary model training, all diffusion function seems to be defined here
         # print(batch, all_loss, metric) # including graph1 and graph2
 
-        # *** no graph_construction node_layer is used here (None) ***
-        # *** other the noise added during the diffusion process, another certainty added during the pre-training process is TruncateProtein in dataset, which randomly truncate proteins into 100 AAs in different epochs
+        # ** no graph_construction node_layer is used here (None) **
+        # ** other the noise added during the diffusion process, another certainty added during the pre-training process is TruncateProtein in dataset ** 
+        # ** which randomly truncate proteins into 100 AAs in different epochs **
         graph1 = batch["graph"]
         if self.graph_construction_model:
             # only atom-scale spatial graph is used, in which features are still based on GearNet (based on AA type and atom pair relative postion, etc)
@@ -380,9 +381,9 @@ class SiamDiff(tasks.Task, core.Configurable):
         # 1和2更像是前向阶段，3和4更像是后向阶段
 
         # 1. add shared sequence noise, the noise level for sequence and structure are the same
-        # *** 给我的感觉是这样的：由于当前的模型是atom-level的模型，所以若要对序列和结构同时加噪声，这里就先对序列加噪声，后对结构加噪声 ***
-        # *** 对序列加噪声的方式是，先得到一个atom-level的mask，指示了当前batch中哪些residue被屏蔽掉哪些被保留（基于当前noise_level），基于这个mask去获取没被屏蔽的residue所对应的原子图和特征 ***
-        # *** 所以感觉最后AA加噪变成了原子图屏蔽的过程（若引入CG尺度，可能做法是类似的） ***
+        # ** 给我的感觉是这样的：由于当前的模型是atom-level的模型，所以若要对序列和结构同时加噪声，这里就先对序列加噪声，后对结构加噪声 **
+        # ** 对序列加噪声的方式是，先得到一个atom-level的mask，指示了当前batch中哪些residue被屏蔽掉哪些被保留（基于当前noise_level），基于这个mask去获取没被屏蔽的residue所对应的原子图和特征 **
+        # ** 所以感觉最后AA加噪变成了原子图屏蔽的过程（若引入CG尺度，可能做法是类似的）**
         if self.gamma < 1.0:
             # absolute ids for masked residues in current batch, boolean mask for unmasked/remained atoms in current batch, residue types for current masked residues
             node_index, node_mask, seq_target = self.add_seq_noise(graph1, noise_level)
@@ -456,7 +457,7 @@ class SiamDiff(tasks.Task, core.Configurable):
             # 所以看起来，使用不同encoder应该都是可以和diffusion模型直接匹配的
             # 从这里开始graph1和graph2（若设定了conformer）都是经过腐蚀的
 
-            # *** atom embedding of (corrupted) orginal graph or conformer graph, graph1 (after corruption), Euclidean distances between corrupted edges in graph1 ***
+            # ** atom embedding of (corrupted) orginal graph or conformer graph, graph1 (after corruption), Euclidean distances between corrupted edges in graph1 **
             # 下面4与这里相同，若不使用conformer（腐蚀图），就使用原始的腐蚀图，若使用conformer就使用conformer的腐蚀图以传递conformer的信息
             struct_pred1 = self.struct_predict(output2, graph1, perturbed_dist1) # (1)根据下面的注释(2)判断，应该这一步struct_pred1是利用原始图以及corrupted的节点表示预测出的原始边距离与corrupted边距离之间的差值（用于产生监督损失，这也是diffusion去噪的目的）
             struct_pred1 = self.eq_transform(struct_pred1, graph1) # eq_transform:  equivariant transform, make the loss function invariant w.r.t. Rt
