@@ -41,7 +41,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    https://drive.google.com/file/d/1ptIM69OkHzsP-fJtsUBF1HTBccM3Iv29/view?usp=sharing (for MARTINI3)
 
-3. After preparing the parsed pickle file, we can run the corresponding scripts for MARTINI2 or MARTINI3 to train the CG GearNet-Edge encoder (https://github.com/DeepGraphLearning/GearNet) for downstream use:
+3. After preparing the parsed pickle file, we can run the corresponding scripts for MARTINI2 or MARTINI3 to pre-train the CG GearNet-Edge encoder (https://github.com/DeepGraphLearning/GearNet) for downstream use:
 
    MARTINI2 (run 1st and then run 2nd):
 
