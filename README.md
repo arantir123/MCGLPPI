@@ -41,7 +41,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    https://drive.google.com/file/d/1ptIM69OkHzsP-fJtsUBF1HTBccM3Iv29/view?usp=sharing (for MARTINI3)
 
-3. After preparing the parsed pickle file, we can run the corresponding scripts for MARTINI2 or MARTINI3 to pre-train the CG GearNet-Edge encoder (https://github.com/DeepGraphLearning/GearNet) for downstream use:
+3. After preparing the parsed pickle file, we can run the corresponding scripts for MARTINI2 or MARTINI3 to pre-train the CG GearNet-Edge protein graph encoder (https://github.com/DeepGraphLearning/GearNet) for downstream use:
 
    MARTINI2 (run 1st and then run 2nd):
 
@@ -59,7 +59,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-4. As a reference of the corresponding pre-training code in the atom- and residue-scale, we also clone the original code in this repository (in siamdiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
+4. As a reference of the corresponding pre-training scripts in the atom- and residue-scale, we also clone the original ones in this repository (in siamdiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
 
    
 
