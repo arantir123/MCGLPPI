@@ -293,8 +293,6 @@ def GBT_test(dataset, model, max_time=None, device=None):
     return pred, target, names
 
 
-# * compared with cg_downstream_1gpu.py, an extra loop is created for each fold, in which the json file for current loop will be temporarily saved for data splitting *
-# * this script is also added the support of retrieving embeddings for each protein complex from pre-trained model (controlled by above parameter 'whether_emb_save') *
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
