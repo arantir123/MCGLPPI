@@ -43,13 +43,17 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
 3. After preparing the parsed pickle file, we can run the corresponding scripts for MARTINI2 or MARTINI3 to train the CG GearNet-Edge encoder (https://github.com/DeepGraphLearning/GearNet) for downstream use:
 
-   1) python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_1st.yaml (for MARTINI2)
-   
-   2) python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_2nd.yaml (for MARTINI2)
+   MARTINI2 (run 1st and then run 2nd):
 
-   1) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_1st.yaml (for MARTINI3)
+   1) python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_1st.yaml
    
-   2) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_2nd.yaml (for MARTINI3)
+   2) python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_2nd.yaml
+
+   MARTINI3 (run 1st and then run 2nd):
+
+   1) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_1st.yaml
+   
+   2) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_2nd.yaml
 
    We provide the pre-trained CG graph encoder (based on the aforementioned 41,663 MARTINI2 3DID subset) as an example (in pretrained_cgmodels, below is the checkpoint name):
 
