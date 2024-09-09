@@ -29,9 +29,13 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
 1. Based on our assumption, pre-training on DDI templates, which are critical subsets of PPIs where the interaction typically occurs between domains rather than the entire proteins, could enhance the model's ability on PPI binding affinity relevant prediction tasks with a relatively smaller sample amount.
    
-2. The curated original dataset (including the full-atom PDB file and corresponding three CG geometric files for each sample point) and further generated pickle are provided in:
+2. The curated original dataset (including the full-atom PDB file and corresponding three CG geometric files for each sample point) are provided in:
 
-Please note that
+https://drive.google.com/file/d/1nYPwkMhpIrTifOLWL-NDpyLOrnuzczjE/view?usp=sharing
+
+Please note that this zipped file contains 50,359 3DID (https://3did.irbbarcelona.org/) sample points covering 15,983 DDI structure templates. However, we remove any DDI templates from the 3DID dataset that are identical to those present in our downstream datasets, and 41,663 sample points are remained for the main experiments in the manuscript. Based on this, we further provide the parse pickle file for these 41,663 sample points for a quick start:
+
+
 
 
 
