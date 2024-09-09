@@ -6,7 +6,6 @@ from torchdrug.core import Registry as R
 from cg3_steps.cg3_protein import CG3_PackedProtein
 
 
-# * should be registered in torchdrug.layers.geometry.__init__, for to be searched by the register function *
 @R.register("layers.CG3_GraphConstruction")
 class CG3_GraphConstruction(nn.Module, core.Configurable):
     max_seq_dist = 10
