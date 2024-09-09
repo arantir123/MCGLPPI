@@ -28,6 +28,11 @@ __Step1. Generating the coarse-grained (CG) protein files as the initial input o
 __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) templates based on the parsed pickle file.__
 
 1. Based on our assumption, pre-training on DDI templates, which are critical subsets of PPIs where the interaction typically occurs between domains rather than the entire proteins, could enhance the model's ability on PPI binding affinity relevant prediction tasks with a relatively smaller sample amount.
+   
+2. The curated original dataset (including the full-atom PDB file and corresponding three CG geometric files for each sample point) and further generated pickle are provided in:
+
+Please note that
+
 
 
 
