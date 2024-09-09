@@ -25,6 +25,8 @@ __Step1. Generating the coarse-grained (CG) protein files as the initial input o
 
 5. Thanks to the basic code logic of Torchdrug repository (https://torchdrug.ai/), when the first time to run the pre-training or downstream predictions, our scripts (see below) will automatically parse the aforementioned three files for each sample point, and produce and store a pickle (.pkl) file storing all CG Protein Classes for current dataset (e.g., downstream_files/PDBBIND/cg_pdbbind_strictdimer_subset.pkl.gz, corresponding to a complete folder including multiple sub-folders, for each representing a sample point) for the rapid repeated use.
 
+__Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) templates based on the parsed pickle file.__
+
 
 
 ## Quick start ##
