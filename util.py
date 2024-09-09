@@ -110,9 +110,19 @@ def load_config(cfg_file, context=None):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("-c", "--config", help="yaml configuration file", required=True)
 
-    parser.add_argument("-c", "--config", help="yaml configuration file", default='../config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml')
+    parser.add_argument("-c", "--config", help="yaml configuration file", required=True)
+
+    # pretraining configuration:
+    # parser.add_argument("-c", "--config", help="yaml configuration file", default='../config/pretrain/gearnet_1st.yaml')
+    # parser.add_argument("-c", "--config", help="yaml configuration file", default='../config/cg/cgdiff_1st.yaml')
+    # Note: for the second pre-training phase, continuing using the decoder used in the first stage to perform the denoising process
+    # parser.add_argument("-c", "--config", help="yaml configuration file", default='../config/cg/cgdiff_2nd.yaml')
+
+    # downstream configuation:
+    # parser.add_argument("-c", "--config", help="yaml configuration file", default='../config/atom/msp_gearnet.yaml')
+    # parser.add_argument("-c", "--config", help="yaml configuration file", default='../config/cg/pdbbind_gearnet.yaml')
+
     parser.add_argument("-s", "--seed", help="random seed for PyTorch", type=int, default=0)
 
     args, unparsed = parser.parse_known_args()
