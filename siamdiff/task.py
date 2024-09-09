@@ -237,7 +237,7 @@ class SiamDiff(tasks.Task, core.Configurable):
     def add_seq_noise(self, graph, noise_level):
         num_nodes = graph.num_residues
         num_cum_nodes = num_nodes.cumsum(0)
-        # print(num_nodes, num_cum_nodes) # tensor([100, 100, 74, 100, 100,  98, 100, 51], device='cuda:0') tensor([100, 200, 274, 374, 474, 572, 672, 723], device='cuda:0')
+        # print(num_nodes, num_cum_nodes) # tensor([100, 100, 74, 100, 100, 98, 100, 51], device='cuda:0') tensor([100, 200, 274, 374, 474, 572, 672, 723], device='cuda:0')
 
         # decide the mask rate according to the noise level
         # max_ratio: 1, min_ratio: 0.15, the mask rate increase with the increase of the noise level
@@ -376,9 +376,9 @@ class SiamDiff(tasks.Task, core.Configurable):
         # tensor([0.9988, 0.9975, ..., 0.0057, 0.0051]) -> gradually decreases after consecutive multiplication -> 100 values in total
         # self.register_buffer("alphas", alphas)
         noise_level = torch.randint(0, self.alphas.shape[0], (graph1.batch_size,), device=self.device) # (num_graph, )
-        # print(noise_level, noise_level.size()) # tensor([41, 97, 91, 72, 53,  4,  3, 33], device='cuda:0') torch.Size([8]), bs=8
+        # print(noise_level, noise_level.size()) # tensor([41, 97, 91, 72, 53, 4, 3, 33], device='cuda:0') torch.Size([8]), bs=8
 
-        # 1和2更像是前向阶段，3和4更像是后向阶段
+        # 1和2是前向阶段，3和4是后向阶段
 
         # 1. add shared sequence noise, the noise level for sequence and structure are the same
         # ** 给我的感觉是这样的：由于当前的模型是atom-level的模型，所以若要对序列和结构同时加噪声，这里就先对序列加噪声，后对结构加噪声 **
