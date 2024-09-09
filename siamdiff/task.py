@@ -212,7 +212,7 @@ class SiamDiff(tasks.Task, core.Configurable):
         betas = betas.sigmoid() * (sigma_end - sigma_begin) + sigma_begin
         # generating 100 beta values ranging from 0.0012 to 0.0998
         alphas = (1. - betas).cumprod(dim=0)
-        # cumprod: torch.Tensor([1, 2, 3, 4, 5]) -> tensor([ 1., 2., 6., 24., 120.] (1，1×2，1×2×3，1×2×3×4，1×2×3×4×5)
+        # cumprod: torch.Tensor([1, 2, 3, 4, 5]) -> tensor([1., 2., 6., 24., 120.] (1，1×2，1×2×3，1×2×3×4，1×2×3×4×5)
         # print(alphas, len(alphas))
         # tensor([0.9988, 0.9975, ..., 0.0057, 0.0051]) -> gradually decreases after consecutive multiplication -> 100 values in total
         self.register_buffer("alphas", alphas)
@@ -237,7 +237,7 @@ class SiamDiff(tasks.Task, core.Configurable):
     def add_seq_noise(self, graph, noise_level):
         num_nodes = graph.num_residues
         num_cum_nodes = num_nodes.cumsum(0)
-        # print(num_nodes, num_cum_nodes) # tensor([100, 100,  74, 100, 100,  98, 100,  51], device='cuda:0') tensor([100, 200, 274, 374, 474, 572, 672, 723], device='cuda:0')
+        # print(num_nodes, num_cum_nodes) # tensor([100, 100, 74, 100, 100,  98, 100, 51], device='cuda:0') tensor([100, 200, 274, 374, 474, 572, 672, 723], device='cuda:0')
 
         # decide the mask rate according to the noise level
         # max_ratio: 1, min_ratio: 0.15, the mask rate increase with the increase of the noise level
@@ -266,7 +266,7 @@ class SiamDiff(tasks.Task, core.Configurable):
         # print(seq_target.size(), seq_target.min(), seq_target.max())
         # torch.Size([411]) tensor(0, device='cuda:0') tensor(19, device='cuda:0'), num_sample: 411
 
-        # print(graph.atom_name, graph.atom_name.size()) # tensor([17,  1,  0,  ..., 24, 14, 34], device='cuda:0') torch.Size([5710])
+        # print(graph.atom_name, graph.atom_name.size()) # tensor([17, 1, 0, ..., 24, 14, 34], device='cuda:0') torch.Size([5710])
         # print(graph.atom_name2id) # {'OE1': 29, 'OE2': 30, 'OG': 31, 'OG1': 32, 'OH': 33, 'OXT': 34, 'SD': 35, 'SG': 36, 'UNK': 37}
 
         # only keep backbone atoms of the selected residues
@@ -276,7 +276,7 @@ class SiamDiff(tasks.Task, core.Configurable):
                   | ~selected_residue[graph.atom2residue]
         # print(graph.atom2residue, graph.atom2residue.size())
         # print(node_mask, node_mask.size())
-        # tensor([  0,   0,   0,  ..., 722, 722, 722], device='cuda:0') torch.Size([5710])
+        # tensor([0, 0, 0, ..., 722, 722, 722], device='cuda:0') torch.Size([5710])
         # tensor([True, True, True,  ..., True, True, True], device='cuda:0') torch.Size([5710])
 
         # absolute ids for masked residues in current batch, boolean mask for unmasked/remained atoms in current batch, residue types for current masked residues
@@ -285,7 +285,7 @@ class SiamDiff(tasks.Task, core.Configurable):
     def add_struct_noise(self, graph, noise_level):
         # add noise to coordinates and change the pairwise distance in edge features if neccessary
 
-        # cumprod: torch.Tensor([1, 2, 3, 4, 5]) -> tensor([ 1., 2., 6., 24., 120.] (1，1×2，1×2×3，1×2×3×4，1×2×3×4×5)
+        # cumprod: torch.Tensor([1, 2, 3, 4, 5]) -> tensor([1., 2., 6., 24., 120.] (1，1×2，1×2×3，1×2×3×4，1×2×3×4×5)
         # alpha = 1 - beta, beta contains 100 values drawn from the same distribution (100 is the pre-defined noise level values, should also be the step number in original paper)
         a_graph = self.alphas[noise_level] # (num_graph,)
         a_pos = a_graph[graph.node2graph]
@@ -402,7 +402,7 @@ class SiamDiff(tasks.Task, core.Configurable):
             graph1 = graph1.subgraph(node_mask) # ** this function seems not to influence the residue-level information under current setting **
             # print(graph1.num_residue, graph1.num_node) # tensor(723, device='cuda:0') tensor(4268, device='cuda:0')
             # print(graph1.atom_feature, graph1.atom_feature.size()) # torch.Size([4268, 39])
-            # *** retain the graph with unmasked atoms in which only atom_type (atom) node features are retained ***
+            # ** retain the graph with unmasked atoms in which only atom_type (atom) node features are retained **
 
             # also close the residue_feature and residue_type for masked residues in current batch
             with graph1.residue():
@@ -428,7 +428,7 @@ class SiamDiff(tasks.Task, core.Configurable):
 
         # 2. add structure noise
         if self.gamma > 0.0: # gamma is used for controlling weight between structural loss and sequential loss
-            # print(noise_level, noise_level.size()) # tensor([41, 97, 91, 72, 53,  4,  3, 33], device='cuda:0') torch.Size([8]), bs=8
+            # print(noise_level, noise_level.size()) # tensor([41, 97, 91, 72, 53, 4, 3, 33], device='cuda:0') torch.Size([8]), bs=8
             # seems for each sample in different epochs, a noise level ranging from 0 to 100 (predefined) will be selected
             # due to the property of the diffusion model, the diffusion calculation can be normally performed no matter how noise level is selected
             # for graph and graph2, the same noise level will be used
