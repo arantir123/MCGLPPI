@@ -1,0 +1,1297 @@
+import glob
+import os.path
+import string
+import numpy as np
+import torch
+import copy
+import warnings
+from rdkit import Chem
+from torchdrug import utils
+from collections.abc import Sequence
+from torchdrug.utils import pretty
+from torchdrug.core import Registry as R
+from collections import defaultdict
+from torch_scatter import scatter_add, scatter_max, scatter_min
+from torchdrug.data import Molecule, PackedMolecule, Dictionary, feature
+
+
+# general mapping for protein
+residue_symbol2abbr = {"GLY": "G", "ALA": "A", "SER": "S", "PRO": "P", "VAL": "V", "THR": "T", "CYS": "C", "ILE": "I",
+                       "LEU": "L", "ASN": "N", "ASP": "D", "GLN": "Q", "LYS": "K", "GLU": "E", "MET": "M", "HIS": "H",
+                       "PHE": "F", "ARG": "R", "TYR": "Y", "TRP": "W"}
+
+abbr2residue_symbol = {v: k for k, v in residue_symbol2abbr.items()}
+
+
+# * the important difference between MARTINI22 and MARTINI3 is the bead number and bead type *
+class CG3_Protein(Molecule):
+    # Protein class established with coarse-grain features
+    # currently the nodes and edges between nodes are established based on CG
+    _meta_types = {"node", "edge", "residue", "graph",
+                   "node reference", "edge reference", "residue reference", "graph reference"}
+
+    # standard residue/atom id mapping
+    residue2id = {"GLY": 0, "ALA": 1, "SER": 2, "PRO": 3, "VAL": 4, "THR": 5, "CYS": 6, "ILE": 7, "LEU": 8,
+                  "ASN": 9, "ASP": 10, "GLN": 11, "LYS": 12, "GLU": 13, "MET": 14, "HIS": 15, "PHE": 16,
+                  "ARG": 17, "TYR": 18, "TRP": 19}
+
+    residue_symbol2id = {"G": 0, "A": 1, "S": 2, "P": 3, "V": 4, "T": 5, "C": 6, "I": 7, "L": 8, "N": 9,
+                         "D": 10, "Q": 11, "K": 12, "E": 13, "M": 14, "H": 15, "F": 16, "R": 17, "Y": 18, "W": 19}
+
+    atom_name2id = {"C": 0, "CA": 1, "CB": 2, "CD": 3, "CD1": 4, "CD2": 5, "CE": 6, "CE1": 7, "CE2": 8,
+                    "CE3": 9, "CG": 10, "CG1": 11, "CG2": 12, "CH2": 13, "CZ": 14, "CZ2": 15, "CZ3": 16,
+                    "N": 17, "ND1": 18, "ND2": 19, "NE": 20, "NE1": 21, "NE2": 22, "NH1": 23, "NH2": 24,
+                    "NZ": 25, "O": 26, "OD1": 27, "OD2": 28, "OE1": 29, "OE2": 30, "OG": 31, "OG1": 32,
+                    "OH": 33, "OXT": 34, "SD": 35, "SG": 36, "UNK": 37}
+
+    alphabet2id = {c: i for i, c in enumerate(" " + string.ascii_uppercase + string.ascii_lowercase + string.digits)}
+
+    id2residue = {v: k for k, v in residue2id.items()}
+    id2residue_symbol = {v: k for k, v in residue_symbol2id.items()}
+    id2atom_name = {v: k for k, v in atom_name2id.items()}
+    id2alphabet = {v: k for k, v in alphabet2id.items()}
+
+    # coarse-grained molecule id mapping
+    # MARTINI22, 17 types of beads in total
+    # martini22_name2id = {"AC1": 0, "AC2": 1, "C3": 2, "C5": 3, "N0": 4, "Na": 5, "Nd": 6, "Nda": 7, "P1": 8,
+    #                      "P4": 9, "P5": 10, "Qa": 11, "Qd": 12, "SC4": 13, "SC5": 14, "SNd": 15, "SP1": 16}
+    # MARTINI3, 23 types of beads in total
+    martini3_name2id = {"C6": 0, "P2": 1, "P5": 2, "Q5": 3, "Q5n": 4, "SC2": 5, "SC3": 6, "SC4": 7, "SP1": 8,
+                        "SP2": 9, "SP2a": 10, "SP5": 11, "SQ3p": 12, "SQ4p": 13, "SQ5n": 14, "TC3": 15, "TC4": 16,
+                        "TC5": 17, "TC6": 18, "TN5a": 19, "TN6": 20, "TN6d": 21, "TP1": 22}
+
+    martini3_bond2id = {"backbone_bonds": 0, "sidechain_bonds": 1, "sheet_bonds_3": 2, "sheet_bonds_4": 3, "constraints": 4} # itp file bond types
+    martini3_beadpos2id = {"BB": 0, "SC1": 1, "SC2": 2, "SC3": 3, "SC4": 4, "SC5": 5} # bead position categories
+    martini3_angletype2id = {'backbone_angles': 0, 'backbone_sidec_angles': 1, 'sidechain_angles': 2, 'backbone_dihedrals': 3}
+
+    id2martini3_name = {v: k for k, v in martini3_name2id.items()}
+    id2martini3_bond = {v: k for k, v in martini3_bond2id.items()}
+    id2martini3_beadpos = {v: k for k, v in martini3_beadpos2id.items()}
+    id2martini3_angletype = {v: k for k, v in martini3_angletype2id.items()}
+
+    def __init__(self, edge_list=None, bead_type=None, bead2residue=None, bond_type=None, residue_type=None, aa_sequence=None, view=None,
+                 backbone_angles=None, backbone_sidec_angles=None, sidechain_angles=None, backbone_dihedrals=None, intermol_mat=None, **kwargs):
+        # 1. currently (only) edge_list index is set to starting from 0, while the index (for edges, angles, and dihedrals, etc.) in orginial CG itp files starts from 1
+        # 2. initialize the ancestral molecule and graph classes with edge_list and num_node (contained in kwargs recording bead number for current protein)
+        # 3. store the CG-level bead_type, bond_type (only containing bond types provided in cg itp files), node_position into molecule class as self.atom_type, self.bond_type, self.node_position
+        # 4. kwargs.keys(): dict_keys(['node_position', 'num_node', 'num_relation']) for finding defined hyperparameters in ancestral class
+
+        if "atom_type" in kwargs.keys():
+            # print(bead_type) # None
+            bead_type = kwargs["atom_type"]
+            kwargs.pop("atom_type")
+            super(CG3_Protein, self).__init__(edge_list, atom_type=bead_type, bond_type=bond_type, **kwargs)
+        else:
+            super(CG3_Protein, self).__init__(edge_list, atom_type=bead_type, bond_type=bond_type, **kwargs)
+
+        residue_type, num_residue = self._standarize_num_residue(residue_type)
+        self.num_residue = num_residue
+        self.view = self._standarize_view(view) # default: atom after standarization (if it is not specified by transforms.ProteinView)
+        self.aa_sequence = aa_sequence # alphabet string with '.' split (not registered in context manager as attributes to be registered should be torch tensors)
+
+        # BBB (2nd as center)
+        self.backbone_angles = self._standarize_angle(backbone_angles)
+        # BBS (3rd as center)
+        self.backbone_sidec_angles = self._standarize_angle(backbone_sidec_angles)
+        # BSS (3rd as center)
+        self.sidechain_angles = self._standarize_angle(sidechain_angles)
+        # BBBB (2nd as center), it will only be provided for the consecutive four beads being the helix structure, which maintain the helix structure
+        self.backbone_dihedrals = self._standarize_angle(backbone_dihedrals)
+        # core region information (include potential inter-molecular AA pairs between specified interaction parts)
+        self.intermol_mat = self._standarize_angle(intermol_mat)
+
+        # bead2residue index starts from 0
+        bead2residue = self._standarize_attribute(bead2residue, self.num_node)
+
+        with self.atom():
+            with self.residue_reference():
+                self.bead2residue = bead2residue
+
+        with self.residue():
+            self.residue_type = residue_type # tensor idx
+
+    def residue(self):
+        return self.context("residue")
+
+    def residue_reference(self):
+        return self.context("residue reference")
+
+    @property
+    def node_feature(self):
+        if getattr(self, "view", "atom") == "atom":
+            return self.atom_feature
+        else:
+            return self.residue_feature
+
+    @node_feature.setter
+    def node_feature(self, value):
+        self.atom_feature = value
+
+    @property
+    def num_node(self):
+        return self.num_atom
+
+    @num_node.setter
+    def num_node(self, value):
+        self.num_atom = value
+
+    def _check_attribute(self, key, value):
+        super(CG3_Protein, self)._check_attribute(key, value)
+        for type in self._meta_contexts:
+            if type == "residue":
+                if len(value) != self.num_residue:
+                    raise ValueError("Expect residue attribute `%s` to have shape (%d, *), but found %s" %
+                                     (key, self.num_residue, value.shape))
+            elif type == "residue reference":
+                is_valid = (value >= -1) & (value < self.num_residue)
+                if not is_valid.all():
+                    error_value = value[~is_valid]
+                    raise ValueError("Expect residue reference in [-1, %d), but found %d" % (self.num_residue, error_value[0]))
+
+    def _standarize_attribute(self, attribute, size, dtype=torch.long, default=0):
+        if attribute is not None:
+            attribute = torch.as_tensor(attribute, dtype=dtype, device=self.device)
+        else:
+            if isinstance(size, torch.Tensor):
+                size = size.tolist()
+            if not isinstance(size, Sequence):
+                size = [size]
+            attribute = torch.full(size, default, dtype=dtype, device=self.device)
+        return attribute
+
+    def _standarize_num_residue(self, residue_type):
+        if residue_type is None:
+            raise ValueError("`residue_type` should be provided")
+
+        residue_type = torch.as_tensor(residue_type, dtype=torch.long, device=self.device)
+        num_residue = torch.tensor(len(residue_type), device=self.device)
+        return residue_type, num_residue
+
+    def _standarize_angle(self, angle):
+        if angle is None:
+            return torch.zeros(0, device=self.device)
+        else:
+            return torch.as_tensor(angle, dtype=torch.long, device=self.device)
+
+    def __setattr__(self, key, value):
+        if key == "view" and value not in ["atom", "residue"]:
+            raise ValueError("Expect `view` to be either `atom` or `residue`, but found `%s`" % value)
+        return super(CG3_Protein, self).__setattr__(key, value)
+
+    def _standarize_view(self, view):
+        if view is None:
+            if self.num_atom > 0:
+                view = "atom"
+            else:
+                view = "residue"
+        return view
+
+    @classmethod
+    # cgfile is the path storing the original generate CG files
+    def from_cg_molecule(cls, cgfile, AA_num_threshold=3000):
+        # need to extract information from original CG files (then the corresponding features are calculated based on the extractions)
+        # in original implementation of atom-level view (in torchdrug), the local pdbs are read by rdkit and then processed by Molecule.from_molecule function
+        # here we need to rewrite these two functions and combine them together (currently only standard martini3 generated structures are supported)
+        # * besides, for downstream tasks, the protein regions of interest may need to be screened/cropped (e.g., to select interface/interacting regions) *
+        # * which should be carefully considered for the both pre-training and downstream task designs (for better flexibility) *
+
+        # 1. read the files from local positions
+        # normally, for standard (atom-level) pdb files, we need to screen out incomplete proteins (e.g., pdb with only CA being retained) and remove all H atoms
+        # besides, completing side chain atoms and screening out over-large proteins may be needed (determined by specific downstream tasks)
+        # * however, for CG files, the requirement/conclusion of generating CGs includes 1. complete backbone and side chain atoms 2. non-natural AAs being removed 3. AALA/BALA issues already being solved *
+        # * 4. multiple sets of same chain-residue tokens are not included in the same original pdb 5. HETATM rows in standard pdb files will be automatically ignored by martini programme *
+        # * thus, here we can assume that all CG files read here are canonical following the same rules, the necessary case to be considered here is the over-large proteins (currently other special cases can be ignored) *
+        complete_check, cg_info = cls.cg_file_reader(cgfile, AA_num_threshold)
+
+        # isinstance(cg_info, str)=True: fail to create protein class (e.g., over-large proteins returned with related info), isinstance(cg_info, dict)=True: succeed to create protein class (but maybe incomplete)
+        if (not complete_check) and (isinstance(cg_info, str)):
+            return complete_check, cg_info
+
+        # 2. generating basic features for local storage (some advanced features could be calculated after reading the storage file and starting model running)
+        # * residue serial number in CG pdb file does not start from 1, while keeping the number in original pdb file, while it will be re-numbered in CG itp files *
+
+        # * other than the special AALA/BALA cases, another type of special cases are 100A/100B/100C cases, where A/B/C are the [27th-row-digit] residue serial numbers, actually representing different AAs *
+        # * while CG pdb will keep the original A/B/C names, and re-number these names from 1 in itp, thus, current we can ignore such cases if the effective cg files are generated under assumption that *
+        # * the residue serial numbers contained in the generated cg files are effective (in atom-level siamdiff, serial numbers are explicitly checked in the implementation, here we ignore it at first) *
+        edge_list, bead_type, bead2residue, node_position, bond_type, num_node, num_relation, residue_type, aa_sequence, backbone_angles, backbone_sidec_angles, sidechain_angles, backbone_dihedrals = \
+            cls.cg_feature_generator(cg_info, cgfile)
+        # for backbone_angles, backbone_sidec_angles, sidechain_angles, backbone_dihedrals, their entries will be assigned to bead nodes (as the node features)
+        # current allocation logic: backbone_angles: assign it to the middle node, backbone_sidec_angles: assign to its side chain node (SBB scheme for such angles)
+        # sidechain_angles: assign to the backbone node (the smallest node id for each entry), backbone_dihedrals: assign to the 2nd or 3rd bead node
+
+        return complete_check, \
+               cls(edge_list, bead_type=bead_type, bead2residue=bead2residue, node_position=node_position,
+                   bond_type=bond_type, num_node=num_node, num_relation=num_relation, residue_type=residue_type, aa_sequence=aa_sequence,
+                   backbone_angles=backbone_angles, backbone_sidec_angles=backbone_sidec_angles, sidechain_angles=sidechain_angles, backbone_dihedrals=backbone_dihedrals)
+
+    def clone(self):
+        # clone this graph, following the implementation of torchdrug.graph.clone()
+        # print(type(self.edge_list), type(self.atom_type), type(self.bead2residue), type(self.node_position), type(self.bond_type), type(self.residue_type), type(self.aa_sequence))
+        # * considering also clone intermol_mat (i.e., the potential inter-molecular AA pair matrix of the identified core region based on pre-defined contact_threshold) *
+
+        # * the 'clone' function used in this return function is based on _TensorBase of Pytorch *
+        return type(self)(self.edge_list.clone(), bead_type=self.atom_type.clone(), bead2residue=self.bead2residue.clone(), node_position=self.node_position.clone(),
+               bond_type=self.bond_type.clone(), num_node=self.num_node, num_relation=self.num_relation, residue_type=self.residue_type.clone(), aa_sequence=copy.copy(self.aa_sequence),
+               backbone_angles=self.backbone_angles.clone(), backbone_sidec_angles=self.backbone_sidec_angles.clone(), sidechain_angles=self.sidechain_angles.clone(),
+               backbone_dihedrals=self.backbone_dihedrals.clone(), intermol_mat=self.intermol_mat.clone())
+
+    @classmethod
+    def cg_file_reader(cls, cgfile, AA_num_threshold=3000):
+        pdb = os.path.basename(cgfile)
+        # topology files
+        itp_paths = sorted(glob.glob(os.path.join(cgfile, "*.itp")))
+        itp_lines_dict = dict()
+        for itp_path in itp_paths:
+            with open(itp_path) as f:
+                itp_lines = f.readlines()
+            # update the logic of generating keys of itp_lines_dict:
+            # original:
+            # itp_lines_dict[os.path.basename(itp_path).split('.')[0]] = itp_lines # keys: Protein_A, Protein_D (to identify chains)
+
+            # update (for handling the itp name with '.', if '.' contains in the name, the above key generation is wrong like below):
+            # print(os.path.basename(itp_path), os.path.basename(itp_path).split('.'))
+            # MT-1AO7_E63Q.K66A_A.A_WT_nan_WT-cg_B.itp ['MT-1AO7_E63Q', 'K66A_A', 'A_WT_nan_WT-cg_B', 'itp']
+            itp_lines_dict[os.path.basename(itp_path)[:-4]] = itp_lines
+
+        # CG pdb file
+        cg_pdb_path = os.path.join(cgfile, pdb + "-" + "cg.pdb")
+        if os.path.exists(cg_pdb_path):
+            with open(cg_pdb_path) as f:
+                cg_lines = f.readlines()
+        else:
+            with open(os.path.join(cgfile, "cg.pdb")) as f:
+                cg_lines = f.readlines()
+
+        # 1. identifying over-large proteins 2. only explicitly retaining 'ATOM' and 'TER' entries
+        # * in real pre-training cg dataset, there are some proteins which contain the non-consecutive chain (i.e., part of this chain is missing) *
+        # * in this case, for cg pdb file, a 'TER' row will be added into atom rows of this chain to indicate the missiong position *
+        # * thus, in cg pdb file, the residue id in such chains is not consecutive (with extra 'TER' row), while in itp files, these residue ids will be re-numbered consecutively *
+        complete_check, cg_pdb_info = cleaning_cg_pdb(cg_lines, pdb, AA_num_threshold=AA_num_threshold)
+        if not complete_check: # not passing the check
+            return complete_check, cg_pdb_info # over-large protein info
+
+        # 2. detach and classify the information contained in each itp chain file
+        complete_check2 = True
+        cg_itp_info = dict()
+        for key in itp_lines_dict.keys(): # key: Protein_A
+            chain_lines = itp_lines_dict[key]
+            chain_dict_ = cleaning_cg_itp(chain_lines, pdb)
+            complete_check2_, chain_dict = chain_dict_[0], chain_dict_[1]
+            complete_check2 = complete_check2 & complete_check2_
+            cg_itp_info[key] = chain_dict
+
+        # complete check = True: passing the check, False: not passing the check
+        return complete_check & complete_check2, {"cg_pdb_info": cg_pdb_info, "cg_itp_info": cg_itp_info}
+
+    @classmethod
+    # adding the support to None bond info and angle info
+    def cg_feature_generator(cls, cg_info, cg_file):
+        # mainly collect bead_type, edge_list, bond_type, node_position, cb_token (bead serial number is re-numbered from 1 for each chain), bead2residue
+        cg_pdb_info, cg_itp_info, pdb_name = cg_info['cg_pdb_info'], cg_info['cg_itp_info'], os.path.basename(cg_file)
+        # print('current pdb name:', pdb_name)
+
+        # * cg_pdb_info may contain extra 'TER' rows to indicate the position of missing residues in a chain *
+        # * in current logic, when processing cg_pdb_info, 'TER' rows are ignored, only coordinate information of 'ATOM' is retrieved *
+
+        # keys contained in each protein chain of cg_itp_info:
+        # dict_keys(['sequence', 'secondary_structure', 'atom', 'backbone_bonds', 'sidechain_bonds', 'sheet_bonds_3',
+        # 'sheet_bonds_4', 'constraints', 'backbone_angles', 'backbone_sidec_angles', 'sidechain_angles', 'backbone_dihedrals'])
+
+        # (1) collect node_position and cb_token (bead serial number is re-numbered from 1 for each chain)
+        # use the chain order in the cg pdb file to determine the chain order of the itp file
+        # * new version for considering non-consecutive chain id in cg pdb files (e.g., A-B-A rather than chain B is provided after A) *
+        # * in this case, we assume that after the re-arrangement, the bead node order of cg pdb is same to that in itp file *
+
+        # get current chain list
+        current_chain, chain_list = None, []
+        for row in cg_pdb_info:
+            if row[0:4] == 'ATOM':
+                chainid = row[21]
+                if current_chain != chainid:
+                    current_chain = chainid
+                    # chain_list.append('Protein' + '_' + current_chain)
+                    chain_list.append(pdb_name + '-cg' + '_' + current_chain)
+        chain_list = sorted(list(set(chain_list)))
+        # print(chain_list, cg_itp_info.keys())
+
+        # assign bead counter for each chain
+        node_position_, cb_token_list_, local_variable = {chain: [] for chain in chain_list}, {chain: [] for chain in chain_list}, locals()
+        for chain in chain_list:
+            local_variable['counter' + '_' + chain] = 1
+
+        # retrieve position and chain_bead info for each chain
+        for row in cg_pdb_info:
+            if row[0:4] == 'ATOM':
+                chainid = row[21]
+                # chain name in chain_list
+                chainid_ = pdb_name + '-cg' + '_' + row[21]
+                # every iteration will enter a new bead
+                cb_token = '{}_{}'.format(chainid, local_variable['counter' + '_' + chainid_])
+                cb_token_list_[chainid_].append(cb_token)
+                # node_position is arranged based on the fixed 'BB'+'SC1'+'SC2'+'SC3' order
+                node_position_[chainid_].append(get_coords(row))
+                local_variable['counter' + '_' + chainid_] += 1
+
+        # re-arrange the node_position and cb_token_list based on the order of chain_list (the retrieval of other info below is also based on the order of chain_list)
+        node_position, cb_token_list = [], []
+        for chain in chain_list:
+            node_position.extend(node_position_[chain])
+            cb_token_list.extend(cb_token_list_[chain])
+
+        # * old version for retrieving node position and cb_token lists *
+        # current_chain = None
+        # node_position, cb_token_list, chain_list = [], [], []
+        # for row in cg_pdb_info:
+        #     if row[0:4] == 'ATOM':
+        #         chainid = row[21]
+        #         if current_chain != chainid:
+        #             counter1 = 1
+        #             current_chain = chainid
+        #             chain_list.append(pdb_name + '-cg' + '_' + current_chain)
+        #         cb_token = '{}_{}'.format(chainid, counter1)
+        #         cb_token_list.append(cb_token)
+        #         node_position.append(get_coords(row))
+        #         counter1 += 1
+
+        # check the correspondence between the cg pdb file and itp files
+        # it seems that if chains in the same original pdb have the same topological structure (the coordinate sets could be different)
+        # martini will generate one itp file for these chains, our current plan is to duplicate the itp and allocate it to every such chain
+        # more specifically, it will occur when two chains have the same AA sequence and secondary structures
+        # however, we still need to check the consistency of the chain names provided for cg pdb and itp files
+        pdb_chain_set, itp_chain_set = set(chain_list), set(cg_itp_info.keys())
+        assert pdb_chain_set == itp_chain_set, "the chain identifiers contained in CG pdb file and itp file are different for {}: {}, {} (should be consistent)".\
+            format(pdb_name, pdb_chain_set, itp_chain_set)
+        # * other than the above check, another check for checking the consistency between cg pdb file and itp files is that, *
+        # * the num_node generated here is from itp files, while node_position is from cg pdb file, when creating the CG Protein class for current sample, *
+        # * it will trigger its _check_attribute function to check the node numbers contained in both data are the same, if not, an exception will be thrown *
+
+        # (2) collect bead_type, edge_list, bond_type (need to transform the directed edges to undirected edges), bead2residue
+        # chain_list: ['Protein_A', 'Protein_D']
+        bead_type, edge_list, bead2residue, res_serial_list = [], [], [], []
+        chain_bead_num, chain_aa_num, residue_type = [], [], [] # record the bead and aa numbers following the order of current chain_list (can be zipped with the chain_list)
+        # * for bead_type: need to collect the bead number of each chain (following the chain_list order), for generating absolute (bead node) idx for current protein *
+
+        # should not be influenced by extra 'TER' as currently processing the re-numbered itp info
+        for chain in chain_list:
+            chain_bead_info = cg_itp_info[chain]['atom']
+            chain_aa_info = cg_itp_info[chain]['sequence']
+
+            chain_bead_num.append(len(chain_bead_info))
+            chain_aa_num.append(len(chain_aa_info))
+            residue_type.append(chain_aa_info)
+
+            current_res_serial = None
+            for row in chain_bead_info:
+                row = row.split() # each row represents a new bead
+                # bead name, residue serial number (re-numbered from 1), residue name, bead position category (indicating BB/SC1/SC2/SC3/SC4/SC5): 12, 1, 4, 0
+                bead, res_serial, res, bead_pos = cls.martini3_name2id[row[1]], int(row[2]), cls.residue2id[row[3]], cls.martini3_beadpos2id[row[4]]
+                if current_res_serial != res_serial:
+                    current_res_serial = res_serial
+                    res_serial_list.append(res_serial) # record the aa serial numbers of each chain following the order of chain_list
+                bead2residue.append(len(res_serial_list) - 1)
+                bead_type.append([bead, res, bead_pos]) # transform bead type and corresponding residue type and bead position category into idx
+        # print(chain_bead_num, chain_aa_num) # [248, 191] [108, 87]
+        # print(bead_type, bead2residue, len(bead2residue))
+
+        chain_bead_cumnum = np.cumsum([0] + chain_bead_num[:-1]) # [0 248]
+        # * for edge_list: the absolute (bead node) idx for current protein is used for facilitating identifying the allocation of each bead node to corresponding residue *
+        bond_keys = list(cls.martini3_bond2id.keys()) # ['backbone_bonds', 'sidechain_bonds', 'sheet_bonds_3', 'sheet_bonds_4', 'constraints']
+        backbone_angles, backbone_sidec_angles, sidechain_angles, backbone_dihedrals = [], [], [], []
+        angle_keys = list(cls.martini3_angletype2id) # ['backbone_angles', 'backbone_sidec_angles', 'sidechain_angles', 'backbone_dihedrals']
+
+        for chain_id, chain in enumerate(chain_list): # get one chain itp
+            chain_itp_info = cg_itp_info[chain]
+            cum_bead_id = chain_bead_cumnum[chain_id] # cumulative bead serial number for current chain
+            for bond_key in bond_keys: # get one type of bond for current chain
+                rows = chain_itp_info[bond_key] # get rows for current type of bond
+                current_type = cls.martini3_bond2id[bond_key] # current bond type
+                for row in rows:
+                    row = row.split()
+                    h, t = int(row[0]) + cum_bead_id - 1, int(row[1]) + cum_bead_id - 1 # make edge_list index starting from 0
+                    edge_list += [[h, t, current_type], [t, h, current_type]]
+
+            for angle_key in angle_keys:
+                rows = chain_itp_info[angle_key]
+                for row in rows:
+                    row = row.split()
+                    if 'dihedral' in angle_key:
+                        # print(pdb_name, chain, row)
+                        _1, _2, _3, _4 = int(row[0])+cum_bead_id-1, int(row[1])+cum_bead_id-1, int(row[2])+cum_bead_id-1, int(row[3])+cum_bead_id-1 # make angle node index start from 0
+                        locals()[angle_key] += [[_1, _2, _3, _4]]
+                    else:
+                        _1, _2, _3= int(row[0])+cum_bead_id-1, int(row[1])+cum_bead_id-1, int(row[2])+cum_bead_id-1
+                        locals()[angle_key] += [[_1, _2, _3]]
+                        # print(angle_key, locals()[angle_key])
+
+        assert len(edge_list), "edge information provided in itp files of protein {} is empty".format(pdb_name)
+        edge_list = torch.tensor(sorted(edge_list)) # sorted: fix the edge_list order
+        bond_type = torch.tensor(edge_list)[:, -1]
+        bead_type = torch.tensor(bead_type)
+        bead2residue = torch.tensor(bead2residue)
+
+        # num_relation records edge types in original itp files (based on the definition of martini 2.2), not including the potential extra edge types which will be defined in graph models
+        num_node, num_relation = sum(chain_bead_num), len(cls.martini3_bond2id)
+        aa_sequence = '.'.join(residue_type)
+        residue_type = torch.tensor([cls.residue_symbol2id[i] for chain in residue_type for i in chain])
+
+        node_position = np.array(node_position)
+        backbone_angles = torch.tensor(backbone_angles)
+        backbone_sidec_angles = torch.tensor(backbone_sidec_angles)
+        sidechain_angles = torch.tensor(sidechain_angles)
+        backbone_dihedrals = torch.tensor(backbone_dihedrals)
+
+        # a final check for the bead number correspondence of each chain between cg pdb and itp
+        # chain_bead_num comes from itp files, cb_token_list_ comes form cg pdb files
+        chain_bead_num_ = [len(cb_token_list_[chain]) for chain in chain_list]
+        assert chain_bead_num_ == chain_bead_num, \
+            "the bead number for each chain between CG pdb and itp files is different for {}, the number in itp files is {}, while the number in CG pdb is {}".\
+                format(pdb_name, chain_bead_num, chain_bead_num_)
+        # print(chain_bead_num, chain_bead_num_) # [341, 75] [341, 75]
+
+        return edge_list, bead_type, bead2residue, node_position, bond_type, num_node, num_relation, residue_type, aa_sequence, \
+               backbone_angles, backbone_sidec_angles, sidechain_angles, backbone_dihedrals
+
+    def protein_cropping(self, cropping_threshold=12, contact_threshold=6, compact=True):
+        # this function is performed prior to the 'transform' functions
+        aa_num_chain = [len(chain) for chain in self.aa_sequence.split('.')]
+        assert self.residue_type.size(0) == sum(aa_num_chain) == int(self.num_residue), \
+            "the residue number in residue_type and aa_sequence should be the same"
+
+        # currently only chain number == 2 in a protein is supported (the binding affinity is measured between these two chains)
+        if len(aa_num_chain) == 2:
+            # get the BB positions of each chain as the positions of corresponding residues
+            BB_mask = (self.atom_type[:, 2] == self.martini3_beadpos2id['BB'])
+            BB_position = self.node_position[BB_mask].unsqueeze(0)
+
+            # (1) square_distance input (support batch calculation): src: source points, [B, N, C], dst: target points, [B, M, C]
+            # output: a symmetric matrix -> 195 * 195 (195 is total residue/BB number in current protein)
+            # * i.e., use the inter-BB distance as the distance between pairwise AAs (the output is the squared distance) *
+            aa_square_distance = square_distance(BB_position, BB_position).squeeze(0)
+
+            # (2) print(np.cumsum([0] + aa_num_chain), aa_num_chain) # [0, 108, 195], [108, 87]
+            # in the case of two chains, only first sub-matrix of aa_square_distance is used
+            contact_matrix = aa_square_distance[:aa_num_chain[0], aa_num_chain[0]:]
+
+            # get the closest distance within the contact matrix (for later distance check)
+            closest_distance = torch.sqrt(torch.min(contact_matrix))
+
+            contact_matrix = (contact_matrix <= contact_threshold ** 2) # 8.5A ** 2
+            contact_matrix = torch.nonzero(contact_matrix)
+            # * current contact matrix contains AA pairs retained for the core region (relative id, first row: AA id in part1, second row: AA id in part 2) *
+            # * only containing the inter-molecular relationships between the two parts (based on pre-defined contact_threshold) *
+
+            contact_matrix[:, 1] = contact_matrix[:, 1] + aa_num_chain[0] # transform relative AA ids to absolute ids
+            contact_aa_index = torch.cat([contact_matrix[:, 0], contact_matrix[:, 1]])
+            # tensor([34, 35, 99, 138, 150, 151, 152])
+            contact_aa_index = torch.unique(contact_aa_index, sorted=True) # remove the duplicated AA indices
+
+            # (3) based on the found contact AAs and cropping threshold to retain proteins
+            # any AAs having distance to contact AAs smaller than cropping threshold will be retained
+            # the distance for retaining these AAs is also based on aforementioned inter-BB distance
+            # * in every selected aa_square_distance[contact_aa_index] row, the position representing current AA must be zero (identity itself) *
+            # * in this case, all contact AAs calculated above will be retained during residue_mask-based graph cropping *
+            retain_matrix = (aa_square_distance[contact_aa_index] <= cropping_threshold ** 2)
+            # * torch.Size([7, 195]), for its each row/AA, the position for current AA in this row should be True (diagonality of aa_square_distance) *
+            # * therefore torch.nonzero(retain_matrix)[:, 0] is not needed here *
+
+            # print('the maximum distance within the distance matrix of selected contact AAs:',
+            #       torch.max(torch.sqrt(torch.clamp(aa_square_distance[contact_aa_index], min=0))))
+            # maximum: 58.5827 in the subset of ATLAS (based on contact_threshold == 8.5A)
+
+            retain_aa_index = torch.unique(torch.nonzero(retain_matrix)[:, 1], sorted=True) # * get the absolute ids for the retained AAs *
+            # * current contact_matrix: the matrix only containing the inter-molecular AA pairs based on pre-defined contact_threshold *
+            # * the contact_threshold can be adjusted, which is not directly related to vdw and electrostatic CG cutoff *
+            return self.residue_mask(retain_aa_index, compact=compact, intermol_mat=contact_matrix), closest_distance
+
+        else:
+            print('current protein cropping does not support proteins with chain number over two')
+            raise NotImplementedError
+
+    def residue_mask(self, index, compact=False, intermol_mat=None):
+        """
+        Return a masked protein based on the specified residues.
+        Note the compact option is applied to both residue and atom ids.
+        Parameters:
+            index (array_like): residue index: mask[start:end] = True
+            start and end represent the end point AAs to be retained
+            compact (bool, optional): compact residue ids or not
+        Returns:
+            Protein
+        """
+        index = self._standarize_index(index, self.num_residue)
+        # transform the boolean mask to the consecutive absolute AA serial numbers of AAs to be retained
+        # tensor([56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69)]
+        if (torch.diff(index) <= 0).any():
+            warnings.warn("`residue_mask()` is called to re-order the residues. This will change the protein sequence."
+                          "If this is not desired, you might have passed a wrong index to this function.")
+
+        residue_mapping = -torch.ones(self.num_residue, dtype=torch.long, device=self.device)
+        residue_mapping[index] = torch.arange(len(index), device=self.device)
+        # 1. get a mapping for residue absolute ids with the size of self.num_residue
+        # in which ids for retained AAs are compact new absolute ids, and -1 for removed AAs
+
+        # residue_mapping (above): residue number size, self.bead2residue: bead node size
+        # thus, node_index is to allocate residue mask to each bead node
+        node_index = residue_mapping[self.bead2residue] >= 0
+        # transform the bead-level mask into real-value-based mask (indicating the positions of bead nodes to be retained based on retained AAs)
+        node_index = self._standarize_index(node_index, self.num_node) # the node-based mask
+        # 2. after self._standarize_index, node_index contains remained bead nodes with original node absolute ids
+
+        mapping = -torch.ones(self.num_node, dtype=torch.long, device=self.device)
+        if compact:
+            # * generating the mapping between original sparse bead node indices and the compact ones *
+            # * changing the indices of bead nodes *
+            mapping[node_index] = torch.arange(len(node_index), device=self.device)
+            num_node = len(node_index)
+        else:
+            mapping[node_index] = node_index
+            num_node = self.num_node
+        # 3. if compact=True, generating a bead node mapping which projects from original node absolute ids to new compact absolute ids
+
+        # compact mapping is tensor with the size of bead number, in which masked beads are represented as -1, while retained beads are recorded as consecutive int re-numbered from 0
+        edge_list = self.edge_list.clone() # edge_list is based on the bead node number starting from 0, torch.Size([1014, 3])
+        edge_list[:, :2] = mapping[edge_list[:, :2]]
+        edge_index = (edge_list[:, :2] >= 0).all(dim=-1) # torch.Size([1014])
+        edge_index = self._standarize_index(edge_index, self.num_edge) # remove edges with '-1' nodes
+        # edge_index: the indices retrieving edges without '-1' nodes from original edge_list
+        # tensor([272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285])
+        # 4. current edge index: the node ids are updated while invalid edges are not removed
+        # current edge_index: contain ids for retrieving valid edges from edge_index
+
+        if compact:
+            # node_index contains ids for retrieving retained bead nodes from all nodes: torch.Size([237])
+            # edge_index contains ids for retrieving retained edges from all edges: torch.Size([544])
+            # index contains ids for retrieving retained AAs from all AAs: torch.Size([100])
+            data_dict, meta_dict = self.data_mask(node_index, edge_index, residue_index=index) # residue_index: for retrieving information related to remained AAs
+        else:
+            data_dict, meta_dict = self.data_mask(edge_index=edge_index)
+
+        # truncate the angle information
+        backbone_angles = self.angle_mapping(self.backbone_angles, mapping)
+        backbone_sidec_angles = self.angle_mapping(self.backbone_sidec_angles, mapping)
+        sidechain_angles = self.angle_mapping(self.sidechain_angles, mapping)
+        backbone_dihedrals = self.angle_mapping(self.backbone_dihedrals, mapping)
+
+        # retrieving the required information for initialing an on-the-fly truncated protein class
+        bead_type, bead2residue, node_position, bond_type, residue_type = \
+            data_dict['atom_type'], data_dict['bead2residue'], data_dict['node_position'], data_dict['bond_type'], data_dict['residue_type']
+        # bead type information: [bead, res, bead_pos]
+
+        # do not need to return core region AA pair information
+        if intermol_mat == None:
+            # edge_list has already been updated based on new relative node ids after above mapping function, num_node is also updated here
+            return type(self)(edge_list[edge_index], bead_type=bead_type, bead2residue=bead2residue, node_position=node_position,
+                   bond_type=bond_type, num_node=num_node, num_relation=self.num_relation, residue_type=residue_type, view=self.view,
+                   backbone_angles=backbone_angles, backbone_sidec_angles=backbone_sidec_angles, sidechain_angles=sidechain_angles, backbone_dihedrals=backbone_dihedrals)
+        # otherwise
+        else:
+            # all elements in intermol_mat should in elements in index (to ensure -1 will not occur at residue_mapping[intermol_mat])
+            assert torch.all(torch.isin(intermol_mat, index)), 'All elements in intermol_mat should in elements of the index input of this cropping function.'
+            if compact:
+                # the retained AAs do not only include AAs in core region, also including AAs searched by cropping_threshold
+                intermol_mat = residue_mapping[intermol_mat] # mapping the elements in intermol_mat into the new compact version after the cropping
+
+            return type(self)(edge_list[edge_index], bead_type=bead_type, bead2residue=bead2residue, node_position=node_position,
+                   bond_type=bond_type, num_node=num_node, num_relation=self.num_relation, residue_type=residue_type, view=self.view, backbone_angles=backbone_angles,
+                   backbone_sidec_angles=backbone_sidec_angles, sidechain_angles=sidechain_angles, backbone_dihedrals=backbone_dihedrals, intermol_mat=intermol_mat)
+
+    def angle_mapping(self, angles, mapping):
+        if angles.size(0) > 0:
+            angle_info = angles.clone()
+            angle_info = mapping[angle_info]
+            angle_index = (angle_info >= 0).all(dim=-1)
+            angle_index = self._standarize_index(angle_index, angles.size(0))
+            return angle_info[angle_index]
+        else:
+            return angles.clone()
+
+    def data_mask(self, node_index=None, edge_index=None, residue_index=None, graph_index=None, include=None, exclude=None):
+        data_dict, meta_dict = super(CG3_Protein, self).data_mask(node_index, edge_index, graph_index=graph_index, include=include, exclude=exclude)
+        # Note:
+        # (1) inherited data_mask in graph class mainly handles 'node', 'edge', 'graph' attributes registered with context manager ('residue'-related ones are handled below)
+        # meta_dict: {'atom_type': {'node'}, 'formal_charge': {'node'}, 'explicit_hs': {'node'}, 'chiral_tag': {'node'}, 'radical_electrons': {'node'},
+        # 'atom_map': {'node'}, 'node_position': {'node'}, 'bond_type': {'edge'}, 'bond_stereo': {'edge'}, 'stereo_atoms': {'edge'},
+        # 'bead2residue': {'node', 'residue reference'}, 'residue_type': {'residue'}}
+
+        # (2) information of protein class initialization:
+        # cls(edge_list, bead_type=bead_type, bead2residue=bead2residue, node_position=node_position,
+        #    bond_type=bond_type, num_node=num_node, num_relation=num_relation, residue_type=residue_type, aa_sequence=aa_sequence)
+
+        # (3) the following attributes of (class initialization) features are registered using the context manager of protein class or molecule class
+        # thus, we can understand that what data_dict/meta_dict returns are the information registered with the context manager in protein/molecule class
+        # besides, we can find that unless we do not register atom-level features like explicit_hs in molecule class (i.e., modify this class),
+        # these features will also be retrieved here by molecule.data_mask function
+
+        # (4) check attributes in meta_dict:
+        # 1. atom_type/bead_type: {'node'}, node_index 2. bead2residue: {'node', 'residue reference'}, node_index, need further check below 3. node_position: {'node'}, node_index
+        # 4. bond_type: {'edge'}, edge_index 5. residue_type: {'residue'}, need further check below
+        # additional check other than the attributes in meta_dict: 1. edge_list 2. num_node 3. num_relation
+        residue_mapping = None
+        for k, v in data_dict.items():
+            for type in meta_dict[k]:
+                if type == "residue" and residue_index is not None:
+                    if v.is_sparse:
+                        v = v.to_dense()[residue_index].to_sparse()
+                    else:
+                        v = v[residue_index]
+                elif type == "residue reference" and residue_index is not None:
+                    if residue_mapping is None:
+                        # residue_mapping is a tensor with the shape of num_residue + 1
+                        # in which the values not equalling to -1 indicate the residues to be retained
+                        # and these values are re-numbered from 0 consecutively for being retrieved by 'v' below
+                        # due to the constraint from residue_index, elements in 'v' can only retrieve values not equalling to -1 from residue_mapping
+                        residue_mapping = self._get_mapping(residue_index, self.num_residue)
+                    # re-mapp/re-number the ids in bead2residue starting from 0 consecutively
+                    v = residue_mapping[v]
+            data_dict[k] = v
+
+        # for aa_sequence, in current logic it is not used in the training process (only used in recording AA sequence for pickle storage)
+        # therefore in current sub-graph truncation process, this information will not be passed into truncated proteins
+        # aa_sequence = self.aa_sequence.replace('.', '')
+        # aa_sequence = ''.join((np.array(list(aa_sequence))[residue_index]).tolist())
+        return data_dict, meta_dict
+
+    # return a subgraph based on the specified residues
+    def subresidue(self, index):
+        return self.residue_mask(index, compact=True)
+
+    @classmethod
+    # * this function is called in 'graph_collate' function in torchdrug/data/dataloader.py *
+    # * calling the below CG3_PackedProtein to create the batch protein graph (defined in the last row of this script) *
+    # * CG3_Protein.packed_type = CG3_PackedProtein (packed_type is what this function return in the end) *
+    def pack(cls, graphs):
+        # * adding the record of residue number and view information *
+        # * adding the support of bead2residue cumulative sum *
+        # * adding the support of angle information from CG itp files *
+        # * adding the support of intermolcular matrix information from the AA-based distance matric from the cropping function *
+        edge_list = []
+        edge_weight = []
+        num_nodes = []
+        num_edges = []
+        num_residues = []
+        backbone_angles = []
+        backbone_sidec_angles = []
+        sidechain_angles = []
+        backbone_dihedrals = []
+        intermol_mat = []
+        # pack the information the input graphs
+        num_cum_node = 0
+        num_cum_edge = 0
+        num_cum_residue = 0
+        num_graph = 0
+        data_dict = defaultdict(list)
+        meta_dict = graphs[0].meta_dict
+        view = graphs[0].view
+        for graph in graphs:
+            edge_list.append(graph.edge_list)
+            edge_weight.append(graph.edge_weight)
+            num_nodes.append(graph.num_node)
+            num_edges.append(graph.num_edge)
+            num_residues.append(graph.num_residue)
+            backbone_angles.append(graph.backbone_angles + num_cum_node)
+            backbone_sidec_angles.append(graph.backbone_sidec_angles + num_cum_node)
+            sidechain_angles.append(graph.sidechain_angles + num_cum_node)
+            backbone_dihedrals.append(graph.backbone_dihedrals + num_cum_node)
+            # * note that the incremental information for angles is the 'num_cum_node' (bead node-based) *
+            # * while that for intermolecular matrix is 'num_cum_residue' (because the distance calculation is AA-based) *
+            intermol_mat.append(graph.intermol_mat + num_cum_residue)
+            for k, v in graph.data_dict.items():
+                for type in meta_dict[k]:
+                    if type == "graph":
+                        v = v.unsqueeze(0)
+                    elif type == "node reference":
+                        v = torch.where(v != -1, v + num_cum_node, -1)
+                    elif type == "edge reference":
+                        v = torch.where(v != -1, v + num_cum_edge, -1)
+                    elif type == "residue reference":
+                        # bead2residue cumulative sum
+                        v = torch.where(v != -1, v + num_cum_residue, -1)
+                    elif type == "graph reference":
+                        v = torch.where(v != -1, v + num_graph, -1)
+                data_dict[k].append(v)
+            num_cum_node += graph.num_node # one value
+            num_cum_edge += graph.num_edge # one value
+            num_cum_residue += graph.num_residue # one value
+            num_graph += 1
+
+        edge_list = torch.cat(edge_list)
+        edge_weight = torch.cat(edge_weight)
+        backbone_angles = torch.cat(backbone_angles)
+        backbone_sidec_angles = torch.cat(backbone_sidec_angles)
+        sidechain_angles = torch.cat(sidechain_angles)
+        backbone_dihedrals = torch.cat(backbone_dihedrals)
+        intermol_mat = torch.cat(intermol_mat)
+
+        # data_dict.keys: dict_keys(['atom_type', 'formal_charge', 'explicit_hs', 'chiral_tag', 'radical_electrons',
+        # 'atom_map', 'node_position', 'bond_type', 'bond_stereo', 'stereo_atoms', 'bead2residue', 'residue_type'])
+        data_dict = {k: torch.cat(v) for k, v in data_dict.items()}
+
+        return cls.packed_type(
+            edge_list, edge_weight=edge_weight, num_relation=graphs[0].num_relation, num_nodes=num_nodes, num_edges=num_edges, num_residues=num_residues, view=view,
+            backbone_angles=backbone_angles, backbone_sidec_angles=backbone_sidec_angles, sidechain_angles=sidechain_angles, backbone_dihedrals=backbone_dihedrals,
+            intermol_mat=intermol_mat, meta_dict=meta_dict, **data_dict)
+
+    def __repr__(self):
+        fields = ["num_atom=%d" % self.num_node, "num_bond=%d" % self.num_edge,
+                  "num_residue=%d" % self.num_residue]
+        if self.device.type != "cpu":
+            fields.append("device='%s'" % self.device)
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(fields))
+
+
+def square_distance(src, dst):
+    """
+    Calculate Euclid distance between each two points.
+    src^T * dst = xn * xm + yn * ym + zn * zm；
+    sum(src^2, dim=-1) = xn*xn + yn*yn + zn*zn;
+    sum(dst^2, dim=-1) = xm*xm + ym*ym + zm*zm;
+    dist = (xn - xm)^2 + (yn - ym)^2 + (zn - zm)^2
+         = sum(src**2, dim=-1) + sum(dst**2, dim=-1) - 2*src^T*dst
+    Input:
+        src: source points, [B, N, C]
+        dst: target points, [B, M, C]
+    Output:
+        dist: per-point square distance, [B, N, M]
+    """
+    B, N, _ = src.shape
+    _, M, _ = dst.shape
+    dist = -2 * torch.matmul(src, dst.permute(0, 2, 1))
+    dist += torch.sum(src ** 2, -1).view(B, N, 1)
+    dist += torch.sum(dst ** 2, -1).view(B, 1, M)
+    return dist
+
+
+# * Important Note: for current logic, if over-large proteins are found, this protein will be ignored (returned with the specific identifier) *
+# * besides, currently we do not need to consider non-natural AAs/incomplete proteins/AALA+BALA cases, as these cases will be handled in the pre-processed steps earlier than here *
+def cleaning_cg_pdb(cglines, pdb, AA_num_threshold=3000):
+    # the residue serial numbers in CG pdbs are based on those in original pdb files, which may not be consecutive
+    # while the residue serial numbers in each itp file are re-numbered from 1 (consecutive)
+    # print('current processed pdb name: {}'.format(pdb))
+
+    screened_list = [] # the list containing the cleaned CG lines
+    bead_pos_list = [] # for recording the bead list for current CG file
+    BB_num_threshold = AA_num_threshold # threshold for screening out over-large proteins
+
+    for row in cglines:
+        resname = row[17:20].strip() # residue name
+
+        if row[0:4] == 'ATOM' and len(resname) == 3:
+            # a temporary correcting of CG proteins (i.e., chain a/d to chain B)
+            # if row[21].islower():
+            #     row = row[:21] + 'B' + row[22:]
+            screened_list.append(row)
+            bead_pos_list.append(row[12:16].strip())
+        # a check about the non-residue atoms
+        elif row[0:4] == 'ATOM' and len(resname) != 3:
+            print('Non-residue atoms:', pdb, row)
+        elif row[0:3] == 'TER':
+            screened_list.append(row[0:3] + '\n')
+        else:
+            continue
+    # print(bead_pos_list) # ['BB', 'BB', 'SC1', 'BB', 'SC1', 'BB']
+
+    # over-large protein check
+    BB_num = np.sum(np.array(bead_pos_list) == 'BB') # each residue only has one BB bead
+    if BB_num > BB_num_threshold:
+        return False, 'Over-large protein {} is ignored'.format(pdb)
+
+    return True, screened_list
+
+
+def cleaning_cg_itp(chain_lines, pdb):
+    # ** in some cases, sheet_bonds_3 and sheet_bonds_4 will not exist in itp along with the tag row, **
+    # ** for backbone dihedrals, sometimes the rows will not exist but the tag is remained, which needs to be considered **
+
+    complete_check = True
+    chain_dict = dict()
+    tag = None
+    # Note: within the types martini3_bond2id = {'backbone_bonds': 0, 'sidechain_bonds': 1, 'sheet_bonds_3': 2, 'sheet_bonds_4': 3, 'constraints': 4}
+    # only type 0 will definitely exist for each protein in itp bond types
+    # thus, we also need to consider the case that a part of bond types does not exist in itp files
+    backbone_bonds, sidechain_bonds, sheet_bonds_3, sheet_bonds_4, constraints = [], [], [], [], []
+    backbone_angles, backbone_sidec_angles, sidechain_angles, backbone_dihedrals = [], [], [], []
+
+    # * chain_lines: all lines in itp file of current chain *
+    for row_num, row in enumerate(chain_lines):
+        # * under current logic, each 'elif' branch will not conflict with each other *
+        if row_num != len(chain_lines) - 1:
+            next_row = chain_lines[row_num + 1].strip()
+        else: # the last row of current itp file
+            next_row = ""
+            # * last row of MARTINI itp file should be '#endif' *
+            # further check about the '#endif' tag for finding itp files which may be incomplete (should end with '#endif' tag)
+            if row.strip() != '#endif':
+                print('current itp files of protein {} may be incomplete'.format(pdb))
+                complete_check = False
+
+        # recording AA sequence
+        if row.strip() == "; Sequence:":
+            chain_dict["sequence"] = next_row[2:]
+            # print(chain_dict["sequence"])
+
+        # recording secondary structure
+        elif row.strip() == "; Secondary Structure:":
+            chain_dict["secondary_structure"] = next_row[2:]
+            # print(chain_dict["secondary_structure"])
+
+        # recording CG beads
+        elif row.strip() == "[ atoms ]":
+            aa_record_tag = False
+            tag = "atom"
+            atom = []
+            if "sequence" not in chain_dict.keys():
+                aa_record_tag = True
+                current_resid = None
+                aa_sequence = []
+        # considering the case that 'sequence' does not exist in itp files
+        elif tag == "atom":
+            if next_row == "":
+                row = row.strip()
+                atom.append(row)
+                tag = None
+                # recording AA types if they are not provided in itp file
+                if aa_record_tag == True:
+                    row = row.split()
+                    res_id, res_name = row[2], row[3]
+                    if res_id != current_resid:
+                        current_resid = res_id
+                        aa_sequence.append(residue_symbol2abbr[res_name])
+                    # this is the end of the 'atom' rows
+                    chain_dict["sequence"] = "".join(aa_sequence)
+            else:
+                row = row.strip()
+                atom.append(row)
+                # recording AA types if they are not provided in itp file
+                if aa_record_tag == True:
+                    row = row.split()
+                    res_id, res_name = row[2], row[3]
+                    if res_id != current_resid:
+                        current_resid = res_id
+                        aa_sequence.append(residue_symbol2abbr[res_name])
+
+        # recording backbone bonds with flexible bond length (defined by martini22_aminoacid.itp)
+        elif row.strip() == "; Backbone bonds":
+            # skip the case that the topological tag exists but no content exists
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "backbone_bonds"
+        elif tag == 'backbone_bonds':
+            # if chain_lines[row_num+1].strip() == '; Sidechain bonds':
+            # 1. (len(next_row) > 0 and next_row[0] == ';') for handling cases like '; Sidechain bonds'
+            # 2. next_row == '' for handling empty row cases
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                backbone_bonds.append(row)
+                tag = None
+            else:
+                backbone_bonds.append(row.strip())
+
+        # recording bonds between backbone and side chain with flexible bond length (defined by martini22_aminoacid.itp)
+        elif row.strip() == "; Sidechain bonds":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "sidechain_bonds"
+        elif tag == "sidechain_bonds":
+            # if chain_lines[row_num+1].strip() == '; Short elastic bonds for extended regions':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                sidechain_bonds.append(row)
+                tag = None
+            else:
+                sidechain_bonds.append(row.strip())
+
+        # recording virtual bonds for sheet secondary structure (based on three AA distance)
+        elif row.strip() == "; Short elastic bonds for extended regions":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "sheet_bonds_3"
+        elif tag == "sheet_bonds_3":
+            # if chain_lines[row_num+1].strip() == '; Long elastic bonds for extended regions':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                sheet_bonds_3.append(row)
+                tag = None
+            else:
+                sheet_bonds_3.append(row.strip())
+
+        # recording virtual bonds for sheet secondary structure (based on four AA distance)
+        elif row.strip() == "; Long elastic bonds for extended regions":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "sheet_bonds_4"
+        elif tag == "sheet_bonds_4":
+            # if chain_lines[row_num+1].strip() == '':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                sheet_bonds_4.append(row)
+                tag = None
+            else:
+                sheet_bonds_4.append(row.strip())
+
+        # recording bonds between backbones, between backbone and side chain, and between side chains with fixed bond length (defined by martini3_aminoacid.itp)
+        # for some types of residues, the 'constraints' could be empty, thus we also need to consider the case that the 'constraints' could be empty
+        elif row.strip() == "[ constraints ]":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "constraints"
+        elif tag == "constraints":
+            # if chain_lines[row_num+1].strip() == '':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                constraints.append(row)
+                tag = None
+            else:
+                constraints.append(row.strip())
+
+        # recording backbone angles
+        elif row.strip() == "; Backbone angles":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "backbone_angles"
+        elif tag == "backbone_angles":
+            # if chain_lines[row_num+1].strip() == '; Backbone-sidechain angles':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                backbone_angles.append(row)
+                tag = None
+            else:
+                backbone_angles.append(row.strip())
+
+        # recording backbone-sidechain angles
+        elif row.strip() == "; Backbone-sidechain angles":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "backbone_sidec_angles"
+        elif tag == "backbone_sidec_angles":
+            # if chain_lines[row_num+1].strip() == '; Sidechain angles':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                backbone_sidec_angles.append(row)
+                tag = None
+            else:
+                backbone_sidec_angles.append(row.strip())
+
+        # recording sidechain angles
+        elif row.strip() == "; Sidechain angles":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "sidechain_angles"
+        elif tag == "sidechain_angles":
+            # if chain_lines[row_num+1].strip() == '':
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                sidechain_angles.append(row)
+                tag = None
+            else:
+                sidechain_angles.append(row.strip())
+
+        # recording backbone dihedrals
+        # * the side chain diredrals are not necessarily recorded, as only side chains with aromatic nucleus contain at least three side chain beads so that this dihedral can be calculated *
+        # * however, the aromatic nucleus side chain is the plane structure with this dehedral value 0, which cannot be used for distinguishing (the types of) each other *
+        elif row.strip() == "; Backbone dihedrals":
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                tag = None
+            else:
+                tag = "backbone_dihedrals"
+        elif tag == "backbone_dihedrals":
+            # if chain_lines[row_num+1].strip() == '; Sidechain improper dihedrals':
+            # print(len(next_row), next_row, next_row[0])
+            if (len(next_row) > 0 and next_row[0] == ";") or (next_row == ""):
+                row = row.strip()
+                backbone_dihedrals.append(row)
+                tag = None
+            else:
+                backbone_dihedrals.append(row.strip())
+
+        else:
+            continue
+
+    # print(atom[0], '///' , atom[-1], '///' ,len(atom))
+    # print(backbone_bonds[0], '///' ,backbone_bonds[-1], '///' ,len(backbone_bonds))
+    # print(sidechain_bonds[0], '///', sidechain_bonds[-1], '///', len(sidechain_bonds))
+    # print(sheet_bonds_3[0] if len(sheet_bonds_3) > 0 else sheet_bonds_3, '///', sheet_bonds_3[-1] if len(sheet_bonds_3) > 0 else sheet_bonds_3, '///', len(sheet_bonds_3))
+    # print(sheet_bonds_4[0] if len(sheet_bonds_4) > 0 else sheet_bonds_4, '///', sheet_bonds_4[-1] if len(sheet_bonds_4) > 0 else sheet_bonds_4, '///', len(sheet_bonds_4))
+    # print(constraints[0], '///', constraints[-1], '///', len(constraints))
+    # print(backbone_angles[0], '///', backbone_angles[-1], '///', len(backbone_angles))
+    # print(backbone_sidec_angles[0], '///', backbone_sidec_angles[-1], '///', len(backbone_sidec_angles))
+    # print(sidechain_angles[0], '///', sidechain_angles[-1], '///', len(sidechain_angles))
+    # print(backbone_dihedrals[0], '///', backbone_dihedrals[-1], '///', len(backbone_dihedrals))
+
+    # (1) backbone_angles: BBB (2nd as center_pos, B)
+    # (2) backbone_sidec_angles: BBS (3rd as center_pos, S)
+    # (3) sidechain_angles: BSS (3rd as center_pos, S)
+    # (4) backbone_dihedrals: BBBB (2nd as center_pos, B), it will only be provided for the consecutive four beads being the helix structure, which maintain the helix structure
+
+    complete_check = (len(backbone_bonds) != 0) & (len(sidechain_bonds) != 0) & (len(backbone_angles) != 0) & (len(backbone_sidec_angles) != 0) & complete_check
+    # (1) 'constraints' could be empty if some proteins are lack of specific kinds of residues
+    # (2) 'backbone_bonds' could also be empty, in the case like residues of current whole chain belong the helix structure (these backbone bonds will be assigned to 'constraints')
+    # (3) specifically, 'bonds' and 'constraints' can both be treated as the representation of bond length
+    # (4) the bond length of backbone bonds will be assigned to 'backbone_bonds' or 'constraints' based on the secondary structure:
+    # if one of two beads within a backbone bond is identified as the helix structure, this bond will be 'constraints' otherwise be 'backbone_bonds'
+    # (5) the bond length of side chain bonds will be assigned to 'sidechain_bonds' or 'constraints' according to the AA type:
+    # the specific definition of side chain bond assignment is based on martini3_aminoacid.itp file
+    # (6) the bond length refers to the geometric distance between two beads
+
+    # beads and bonds
+    chain_dict["atom"],chain_dict["backbone_bonds"], chain_dict["sidechain_bonds"], chain_dict["sheet_bonds_3"], chain_dict["sheet_bonds_4"], chain_dict["constraints"] = \
+        atom, backbone_bonds, sidechain_bonds, sheet_bonds_3, sheet_bonds_4, constraints
+    # angles and dihedrals
+    chain_dict["backbone_angles"],chain_dict["backbone_sidec_angles"], chain_dict["sidechain_angles"], chain_dict["backbone_dihedrals"] = \
+        backbone_angles, backbone_sidec_angles, sidechain_angles, backbone_dihedrals
+
+    return complete_check, chain_dict
+
+
+def get_coords(line):
+    if len(line[30:38].strip()) != 0:
+        x = float(line[30:38].strip())
+    else:
+        x = float('nan')  # nan in math format
+    if len(line[38:46].strip()) != 0:
+        y = float(line[38:46].strip())
+    else:
+        y = float('nan')
+    if len(line[46:54].strip()) != 0:
+        z = float(line[46:54].strip())
+    else:
+        z = float('nan')
+    return x, y, z
+
+
+# the class for combining multiple CG_Protein objects into one batch-graph object
+class CG3_PackedProtein(PackedMolecule, CG3_Protein):
+    """
+    Parameters:
+        edge_list (array_like, optional): list of edges of shape :math:`(|E|, 3)`.
+            Each tuple is (node_in, node_out, bond_type).
+        atom_type (array_like, optional): atom types of shape :math:`(|V|,)`
+        bond_type (array_like, optional): bond types of shape :math:`(|E|,)`
+        residue_type (array_like, optional): residue types of shape :math:`(|V_{res}|,)`
+        view (str, optional): default view for this protein. Can be ``atom`` or ``residue``.
+        num_nodes (array_like, optional): number of nodes in each graph
+            By default, it will be inferred from the largest id in `edge_list`
+        num_edges (array_like, optional): number of edges in each graph
+        num_residues (array_like, optional): number of residues in each graph
+        offsets (array_like, optional): node id offsets of shape :math:`(|E|,)`.
+            If not provided, nodes in `edge_list` should be relative index, i.e., the index in each graph.
+            If provided, nodes in `edge_list` should be absolute index, i.e., the index in the packed graph.
+    """
+    unpacked_type = CG3_Protein
+    _check_attribute = CG3_Protein._check_attribute
+
+    def __init__(self, edge_list=None, atom_type=None, bond_type=None, residue_type=None, view=None, num_nodes=None,
+                 num_edges=None, num_residues=None, offsets=None, **kwargs):
+
+        # * the kwargs hyperparameters (which could include angle information) will be sent to all parent class (i.e., PackedMolecule, CG3_Protein) via the initialization function *
+        # * thus, current CG3_Protein will receive the angle information (and potential intermolcular matrix) of the whole batch now (but not re-numbered for the whole batch yet) *
+        super(CG3_PackedProtein, self).__init__(edge_list=edge_list, num_nodes=num_nodes, num_edges=num_edges,
+                                            offsets=offsets, atom_type=atom_type, bond_type=bond_type,
+                                            residue_type=residue_type, view=view, **kwargs)
+
+        num_residues = torch.as_tensor(num_residues, device=self.device)
+        num_cum_residues = num_residues.cumsum(0)
+
+        self.num_residues = num_residues
+        self.num_cum_residues = num_cum_residues
+
+    @property
+    def num_nodes(self):
+        return self.num_atoms
+
+    @num_nodes.setter
+    def num_nodes(self, value):
+        self.num_atoms = value
+
+    # * in current implementation, it will be used for edge_mask in CGDistancePrediction (graph.edge_mask(~functional.as_mask(indices, graph.num_edge))) *
+    # * in this case, the angular node features have not been generated (should be after this 'data_mask' function), thus angular feature alignment is not considered here *
+    # * besides, it will also be used in the 'node_mask' function below *
+    # usage example: data_dict, meta_dict = self.data_mask(edge_index=index), 'index' contains edge indices to be retained
+    def data_mask(self, node_index=None, edge_index=None, residue_index=None, graph_index=None, include=None, exclude=None):
+        # for handling standard registered features (not including unregistered features like angular information)
+        data_dict, meta_dict = super(CG3_PackedProtein, self).data_mask(node_index, edge_index, graph_index=graph_index, include=include, exclude=exclude)
+
+        # print(data_dict.keys())
+        # dict_keys(['atom_type', 'formal_charge', 'explicit_hs', 'chiral_tag', 'radical_electrons', 'atom_map', 'node_position', 'bead2residue',
+        # 'residue_type', 'atom_feature', 'edge_feature', 'bond_feature', 'bond_type', 'bond_stereo', 'stereo_atoms'])
+
+        residue_mapping = None
+        for k, v in data_dict.items():
+            for type in meta_dict[k]:
+                if type == "residue" and residue_index is not None:
+                    if v.is_sparse:
+                        v = v.to_dense()[residue_index].to_sparse()
+                    else:
+                        v = v[residue_index]
+                # residue_index=None: skip the re-numbering function
+                elif type == "residue reference" and residue_index is not None:
+                    if residue_mapping is None:
+                        residue_mapping = self._get_mapping(residue_index, self.num_residue)
+
+                    v = residue_mapping[v]
+            data_dict[k] = v
+
+        return data_dict, meta_dict
+
+    # * in current implementation, it will be used for graph truncation in forward sequence diffusion process (graph1 = graph1.subgraph(node_mask)) *
+    # * while the intermol_mat is only used (in energy decoder) for downstream tasks assuming no further graph cropping in downstream training *
+    # * thus here directly return the original intermol_mat (meanwhile if seq_bb_retain==True, it is equivalent to not further AA cropping as the BB beads of masked AAs are retained) *
+    # input: boolean mask for unmasked/remained CG nodes in current batch (True for remained bead nodes)
+    # in current logic, we assume seq_bb_retain is set to True by default, under which we need to remove all angle information related to masked side chain beads
+    def node_mask(self, index, compact=True):
+        # _standarize_index returns a tensor giving 'True' positions under the size of num_node
+        index = self._standarize_index(index, self.num_node) # not consecutive
+        mapping = -torch.ones(self.num_node, dtype=torch.long, device=self.device)
+
+        if compact:
+            # mapping is the mask+mapping function for retained nodes, masked nodes are -1, while retained nodes are re-numbered from 0
+            mapping[index] = torch.arange(len(index), device=self.device)
+            num_nodes = self._get_num_xs(index, self.num_cum_nodes) # retained bead node number for each protein
+            # print(self.num_nodes, num_nodes) # tensor([237, 120, 231, 120]), tensor([183, 80, 150, 90])
+            offsets = self._get_offsets(num_nodes, self.num_edges)
+            # get the offset (based on cumulative node numbers) for each edge in batch-wise edge_list
+            # print(offsets) # tensor([0, 0, 0, ..., 412, 412, 412])
+        else:
+            mapping[index] = index
+            num_nodes = self.num_nodes
+            offsets = self._offsets
+
+        edge_list = self.edge_list.clone()
+        edge_list[:, :2] = mapping[edge_list[:, :2]] # the node id in edge_list has already been transformed into the new ids in mapping function
+        # edge index is generated based on aforementioned mapping function (if any of end nodes in an edge are labeled to -1, this edge will be totally masked)
+        edge_index = (edge_list[:, :2] >= 0).all(dim=-1)
+
+        # print(edge_index, edge_index.size(), self.num_cum_nodes)
+        # tensor([False,  True, False,  ..., False, False, False]), torch.Size([1532]), tensor([237, 357, 588, 708])
+        num_edges = self._get_num_xs(edge_index, self.num_cum_edges)
+        # print(num_edges) # tensor([418, 158, 316, 180]) -> sum: 1072, extracted from original 1532 edges
+
+        if compact:
+            data_dict, meta_dict = self.data_mask(index, edge_index)
+        else:
+            data_dict, meta_dict = self.data_mask(edge_index=edge_index)
+
+        # start to truncate the angle information, by default, sequence diffusion will only mask side chain beads
+        # while the backbone nodes may also be masked
+        # print(self.backbone_angles.size(), self.sidechain_angles.size()) # torch.Size([308, 3]), torch.Size([108, 3])
+        backbone_angles = self.angle_mapping(self.backbone_angles, mapping)
+        backbone_sidec_angles = self.angle_mapping(self.backbone_sidec_angles, mapping)
+        sidechain_angles = self.angle_mapping(self.sidechain_angles, mapping)
+        backbone_dihedrals = self.angle_mapping(self.backbone_dihedrals, mapping)
+        # print(backbone_angles.size(), sidechain_angles.size()) # torch.Size([308, 3]), torch.Size([51, 3])
+
+        # (1) meta_dict.keys: dict_keys(['atom_type', 'formal_charge', 'explicit_hs', 'chiral_tag', 'radical_electrons', 'atom_map',
+        # 'node_position', 'bond_type', 'bond_stereo', 'stereo_atoms', 'bead2residue', 'residue_type', 'atom_feature'])
+
+        # (2) print(edge_list.size, edge_index.size(), edge_list[edge_index].size(), self.num_residues, offsets.size())
+        # torch.Size([1532, 3]), torch.Size([1532]), torch.Size([1072, 3]), tensor([100, 62, 100, 60]), torch.Size([1532])
+
+        # * we can find that the returned num_residues is same to that before subgraph cropping, the reason should be that *
+        # * actually in original sequence truncation logic, the nodes to be masked are only side chain nodes of masked residues *
+        # * while the backbone (nodes) of these masked residues are retained, thus the num_residues should not be changed *
+        # * in current CG implementation, the backbone beads may also be masked, however, assuming after here *
+        # * num_residues will not be used until the next epoch, in this case, we will not change the num_residues either *
+
+        # (3) data_dict['atom_type'].size, data_dict['node_position'].size, data_dict['bead2residue'].size, data_dict['residue_type'].size
+        # [503, 3], [503, 1, 3], [503], [322] (being processed individually based on its 'residue reference' tag), [503, 17]
+
+        return type(self)(edge_list[edge_index], edge_weight=self.edge_weight[edge_index],
+                          num_nodes=num_nodes, num_edges=num_edges, num_residues=self.num_residues,
+                          view=self.view, num_relation=self.num_relation, offsets=offsets[edge_index],
+                          backbone_angles=backbone_angles, backbone_sidec_angles=backbone_sidec_angles,
+                          sidechain_angles=sidechain_angles, backbone_dihedrals=backbone_dihedrals,
+                          intermol_mat=self.intermol_mat, meta_dict=meta_dict, **data_dict)
+
+    def angle_mapping(self, angles, mapping):
+        if angles.size(0) > 0:
+            angle_info = angles.clone()
+            angle_info = mapping[angle_info]
+            angle_index = (angle_info >= 0).all(dim=-1)
+            return angle_info[angle_index]
+        else:
+            return angles.clone()
+
+    # * in current implementation, it will be used in CGDistancePrediction (graph.edge_mask(~functional.as_mask(indices, graph.num_edge))) *
+    # * in this case, the angular node features have not been generated (should be after this 'edge_mask' function), thus angular feature alignment is not considered here *
+    # * however, we still need to pass the (unregistered) node composition info for each angle to the new generated protein for the later angular node feature calculation *
+    # * while the intermol_mat is only used (in energy decoder) for downstream tasks assuming no further graph cropping in downstream training *
+    # * thus here directly return the original intermol_mat (as edge masking does not include extra AA cropping) **
+    # edge_mask input: a mask with the size of num_edge, using True to indicate the remained edges
+    def edge_mask(self, index):
+        index = self._standarize_index(index, self.num_edge) # tensor([0, 1, 2,  ..., 5195, 5196, 5197])
+        # for handling standard registered features (not including unregistered features like angular information)
+        data_dict, meta_dict = self.data_mask(edge_index=index)
+        # return number of retained edges for each protein
+        num_edges = self._get_num_xs(index, self.num_cum_edges)
+        # CG3_PackedProtein(batch_size=4, num_atoms=[240, 120, 232, 120], num_bonds=[1916, 796, 1678, 808])
+        # print(self.num_edge, index.size(), self.num_cum_edges, num_edges)
+        # tensor(5198), torch.Size([4283]) (only contain retained edge indices), tensor([1916, 2712, 4390, 5198]), tensor([1679, 571, 1442, 591]) (1679 + 571 + 1442 + 591 = 4283)
+
+        # 'edge_mask' is not a 'compact function', since the node indices have not changed (only edge index changes)
+        # print(self.edge_list, self.edge_list.size())
+        # tensor([[1, 0, 1], ..., [711, 710, 6]])), torch.Size([5198, 3])
+        return type(self)(self.edge_list[index], edge_weight=self.edge_weight[index],
+                          num_nodes=self.num_nodes, num_edges=num_edges, num_residues=self.num_residues,
+                          view=self.view, num_relation=self.num_relation, offsets=self._offsets[index],
+                          # pass the (unregistered) node composition for each angle to the new generated protein (no cropping for the node)
+                          backbone_angles=self.backbone_angles, backbone_sidec_angles=self.backbone_sidec_angles,
+                          sidechain_angles=self.sidechain_angles, backbone_dihedrals=self.backbone_dihedrals,
+                          intermol_mat=self.intermol_mat, meta_dict=meta_dict, **data_dict)
+
+    def cuda(self, *args, **kwargs):
+        edge_list = self.edge_list.cuda(*args, **kwargs)
+
+        if edge_list is self.edge_list:
+            return self
+        else:
+            return type(self)\
+                (edge_list, edge_weight=self.edge_weight, num_nodes=self.num_nodes, num_edges=self.num_edges, num_residues=self.num_residues, view=self.view,
+                num_relation=self.num_relation, offsets=self._offsets, backbone_angles=self.backbone_angles, backbone_sidec_angles=self.backbone_sidec_angles,
+                sidechain_angles=self.sidechain_angles, backbone_dihedrals=self.backbone_dihedrals,
+                meta_dict=self.meta_dict, **utils.cuda(self.data_dict, *args, **kwargs))
+
+    # * in current implementation, it will be used for predicting sequence noise in forward sequence diffusion process *
+    @utils.cached_property
+    def residue2graph(self):
+        """Residue id to graph id mapping."""
+        range = torch.arange(self.batch_size, device=self.device)
+        residue2graph = range.repeat_interleave(self.num_residues)
+        return residue2graph
+
+    def __repr__(self):
+        fields = ["batch_size=%d" % self.batch_size,
+                  "num_atoms=%s" % pretty.long_array(self.num_nodes.tolist()),
+                  "num_bonds=%s" % pretty.long_array(self.num_edges.tolist()),
+                  # "num_residues=%s" % pretty.long_array(self.num_residues.tolist())
+                ]
+        if self.device.type != "cpu":
+            fields.append("device='%s'" % self.device)
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(fields))
+
+
+CG3_Protein.packed_type = CG3_PackedProtein
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
