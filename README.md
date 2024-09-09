@@ -60,10 +60,8 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 4. As a reference of the corresponding pre-training scripts in the atom- and residue-scale, we also clone the original ones in this repository (in siamdiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
-
    
-
-
+Tried today :( Still on construction...
 
 ## Quick start ##
 
