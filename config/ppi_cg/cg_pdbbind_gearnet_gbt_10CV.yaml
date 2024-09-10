@@ -59,9 +59,9 @@ task:
     concat_hidden: True
     short_cut: True
     readout: sum
-    
     # num_relation: 1 # original relation number (only containing radius edges)
     num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+    
     edge_input_dim: 53 # cg22_gearnet: 46 + num_relation
     # edge_input_dim: 59 # gearnet: 52 + num_relation
     num_angle_bin: 8
