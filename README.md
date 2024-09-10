@@ -79,7 +79,12 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
 3. After the preparation of the source data for MCGLPPI, the .yaml running scripts can be used to evaluate the model performance based on different data splitting settings. Please follow the illustration in corresponding scripts to set the hyper-parameters for evaluation configurations (the data splitting file ['index_path' argument] and whether to use the pre-trained graph encoder checkpoint ['model_checkpoint' argument] can be specified in these scripts):
 
-   Example 1: 
+   Example 1 (in a standard tenfold cross-validation (CV) setting for MARTINI2):
+
+   /config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml
+
+UNDER CONSTRUCTION...
+
 
    
 ## Quick start ##
