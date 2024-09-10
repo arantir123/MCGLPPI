@@ -4,7 +4,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import warnings
 warnings.simplefilter("ignore")
 
-import json
 import time
 import tqdm
 import util
@@ -25,8 +24,7 @@ from torchdrug import core, models, tasks, datasets, utils, data
 from siamdiff import dataset, model, task, transform
 from cg_steps import cg_pretraining_dataset, cg_downstream_dataset, cg_edgetransform, cg_graphconstruct, \
     cg_models, cg_protein
-from cg_steps import cg_task_preprocess_type1
-# from cg_steps import cg_task_preprocess_type2
+from cg_steps import cg_task_preprocess_type1_stats_cal
 
 
 def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, device, model_save_name, task_path, early_stop=None):
@@ -34,29 +32,40 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
     train_loss, val_metric = [], []
 
     for epoch in range(cfg.num_epoch):
+        whether_stats = True if epoch == 0 else False
         # training
         model.train()
         # current total loss for current batch
-        loss = MLP_loop(train_set, model, optimizer=optimizer, max_time=cfg.get("train_time"), device=device)
+        loss, train_node_num, train_edge_num, train_degree_in, train_degree_out = \
+            MLP_loop(train_set, model, optimizer=optimizer, max_time=cfg.get("train_time"), whether_stats=whether_stats, device=device)
         train_loss.append(loss)
-        # current training loss
+        # current training results
         print("\nEPOCH %d TRAIN loss: %.8f" % (epoch, loss))
 
-        # * change the logic of the evaluation part in 10-fold CV *
-        # * current evaluation set is same to training set *
+        # evaluation
         model.eval()
-        if cfg.model_save_mode == 'val':
-            with torch.no_grad():
-                metric = MLP_test(valid_set, model, max_time=cfg.get("val_time"), device=device)
-            val_metric.append(metric[cfg.eval_metric].item())
-            # current validation (i.e., training in current case) evaluation results
-            print("\nEPOCH %d" % epoch, "VAL metric:", metric)
-
-        # test set for current fold
         with torch.no_grad():
-            test_metric = MLP_test(test_set, model, max_time=cfg.get("test_time"), device=device)
+            metric, val_node_num, val_edge_num, val_degree_in, val_degree_out = \
+                MLP_test(valid_set, model, max_time=cfg.get("val_time"), whether_stats=whether_stats, device=device)
+        val_metric.append(metric[cfg.eval_metric].item())
+        # current validation results
+        print("\nEPOCH %d" % epoch, "VAL metric:", metric)
+
+        # independent test
+        with torch.no_grad():
+            test_metric, test_node_num, test_edge_num, test_degree_in, test_degree_out = \
+                MLP_test(test_set, model, max_time=cfg.get("test_time"), whether_stats=whether_stats, device=device)
         # current test results
         print("\nEPOCH %d" % epoch, "TEST metric:", test_metric)
+
+        if whether_stats:
+            print("average node num, edge num, degree in, and degree out for proteins in the training set:",
+                  '%.3f' % np.mean(train_node_num), '%.3f' % np.mean(train_edge_num), '%.3f' % np.mean(train_degree_in), '%.3f' % np.mean(train_degree_out))
+            print("average node num, edge num, degree in, and degree out for proteins in the validation set:",
+                  '%.3f' % np.mean(val_node_num), '%.3f' % np.mean(val_edge_num), '%.3f' % np.mean(val_degree_in), '%.3f' % np.mean(val_degree_out))
+            print("average node num, edge num, degree in, and degree out for proteins in the test set:",
+                  '%.3f' % np.mean(test_node_num), '%.3f' % np.mean(test_edge_num), '%.3f' % np.mean(test_degree_in), '%.3f' % np.mean(test_degree_out))
+            exit()
 
         if cfg.model_save_mode == 'val':
             # ** the metrics should be those larger represent better performance (e.g., auroc/pearsonr) **
@@ -69,7 +78,7 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
                 # independent test
                 with torch.no_grad():
                     # 'task' is the task wrapper (e.g., PDBBIND) defined outside the 'train' function, which will be updated in every 'loop' function
-                    best_test_metric = MLP_test(test_set, task, max_time=cfg.get("test_time"), device=device)
+                    best_test_metric, _, _, _, _ = MLP_test(test_set, task, max_time=cfg.get("test_time"), device=device)
                 # current test results
                 print("\nEPOCH %d" % epoch, "TEST metric under current best_val:", best_test_metric)
             else:
@@ -102,7 +111,7 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
             scheduler.step()
 
     # save the training loss and evaluation metric curves as dataframe
-    task_path = os.path.dirname(task_path) # save in the save path as label files
+    task_path = os.path.dirname(task_path)
     print('the path to save the training loss and evaluation metric curves: {}'.format(task_path))
     train_loss, val_metric = np.array(train_loss).reshape(-1, 1), np.array(val_metric).reshape(-1, 1)
     train_loss, val_metric = pd.DataFrame(train_loss, columns=[model_save_name]), pd.DataFrame(val_metric, columns=[cfg.eval_metric])
@@ -113,21 +122,27 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
     return best_epoch, best_val
 
 
-def MLP_loop(dataset, model, optimizer=None, max_time=None, device=None):
+def MLP_loop(dataset, model, optimizer=None, max_time=None, whether_stats=False, device=None):
     start = time.time()
 
     t = tqdm.tqdm(dataset)
     total_loss, total_count = 0, 0
-
+    total_node_num, total_edge_num, total_degree_in, total_degree_out = [], [], [], []
     for batch in t:
         # end current loop if the time used exceeds the set max_time * 60 (no matter whether current batch already ends)
         if max_time and (time.time() - start) > 60 * max_time: break
         # clean gradient for current batch
         if optimizer: optimizer.zero_grad()
+
         try:
             batch = utils.cuda(batch, device=device)
             # send batch data into task wrapper to get the loss and corresponding evaluation metric for current batch
-            loss, metric = model(batch)
+            loss, metric, num_nodes, num_edges, degree_in, degree_out = model(batch)
+            if whether_stats:
+                total_node_num.append(num_nodes)
+                total_edge_num.append(num_edges)
+                total_degree_in.append(degree_in)
+                total_degree_out.append(degree_out)
         except RuntimeError as e:
             if "CUDA out of memory" not in str(e): raise (e)
             torch.cuda.empty_cache()
@@ -149,14 +164,22 @@ def MLP_loop(dataset, model, optimizer=None, max_time=None, device=None):
 
         t.set_description(f"{total_loss / total_count:.8f}")
 
-    return total_loss / total_count
+    if whether_stats:
+        total_node_num = np.concatenate(total_node_num)
+        total_edge_num = np.concatenate(total_edge_num)
+        total_degree_in = np.concatenate(total_degree_in)
+        total_degree_out = np.concatenate(total_degree_out)
+
+    return total_loss / total_count, \
+           np.array(total_node_num), np.array(total_edge_num), np.array(total_degree_in), np.array(total_degree_out)
 
 
-def MLP_test(dataset, model, max_time=None, device=None):
+def MLP_test(dataset, model, max_time=None, whether_stats=False, device=None):
     start = time.time()
     t = tqdm.tqdm(dataset)
 
     preds, targets = [], []
+    total_node_num, total_edge_num, total_degree_in, total_degree_out = [], [], [], []
     for batch in t:
         if max_time and (time.time() - start) > 60 * max_time: break
         try:
@@ -164,7 +187,12 @@ def MLP_test(dataset, model, max_time=None, device=None):
             # call to get predictions and labels simultaneously
             # the related two functions are also includes in forward function of task wrapper
             pred, target = model.predict_and_target(batch)
-
+            pred, num_nodes, num_edges, degree_in, degree_out = pred
+            if whether_stats:
+                total_node_num.append(num_nodes)
+                total_edge_num.append(num_edges)
+                total_degree_in.append(degree_in)
+                total_degree_out.append(degree_out)
         except RuntimeError as e:
             if "CUDA out of memory" not in str(e): raise (e)
             torch.cuda.empty_cache()
@@ -176,12 +204,18 @@ def MLP_test(dataset, model, max_time=None, device=None):
 
     pred = utils.cat(preds)
     target = utils.cat(targets)
-
     # the null labels will be masked in 'evaluate' function
     # the acc calculation function in original PropertyPrediction wrapper cannot handle binary classification cases
     metric = model.evaluate(pred, target)
 
-    return metric
+    if whether_stats:
+        total_node_num = np.concatenate(total_node_num)
+        total_edge_num = np.concatenate(total_edge_num)
+        total_degree_in = np.concatenate(total_degree_in)
+        total_degree_out = np.concatenate(total_degree_out)
+
+    return metric, \
+           np.array(total_node_num), np.array(total_edge_num), np.array(total_degree_in), np.array(total_degree_out)
 
 
 def GBT_loop(cfg, encoder, decoder, train_set, test_set, normalization, device):
@@ -250,7 +284,7 @@ def GBT_test(dataset, model, max_time=None, device=None):
     return pred, target
 
 
-# ** compared with cg_downstream_1gpu.py, an extra loop is created for each fold, in which the json file for current loop will be temporarily saved for data splitting **
+# * currently this script is only used for regression-based tasks including PDBBIND and ATLAS *
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
@@ -263,7 +297,6 @@ if __name__ == "__main__":
     # for pretraining: only set the seed for generating pytorch random numbers (e.g., torch.rand, to control the noise-level/scale added to proteins)
     # here: control the random seed not only for generating random numbers but also for modeling optimization
     seed = args.seed
-    print('current random seed:', seed)
     torch.manual_seed(seed + comm.get_rank())
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
@@ -281,16 +314,7 @@ if __name__ == "__main__":
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
-    # start the loop from here:
-    # read the jsonl file for the 10-fold CV
-    index_path = cfg.dataset.index_path
-    with open(index_path) as f:
-        splits = f.readlines()
-    split_list = []
-    for split in splits:
-        split_list.append(json.loads(split))
-
-    # use GBT as the decoder
+    # use GBT as the decoder (extract the configuration of GBT from yaml and remove it for below retrieval)
     if 'gbt_use' in cfg.task.keys():
         print('using GBT as the decoder')
         gbt_pars = cfg.task.gbt_use
@@ -300,123 +324,66 @@ if __name__ == "__main__":
     else:
         gbt_pars = None
 
-    # record the time of starting 10-fold CV
-    current_time, t0 = datetime.now().strftime("%Y_%m_%d_%H_%M"), time.time()
-    MAE_total, RMSE_total, PEARSON_total, label_total, prediction_total, name_total = [], [], [], [], [], []
-    for fold in range(len(split_list)):
-        t1 = time.time()
-        print('current fold:', fold)
-        current_fold_split = split_list[fold]
-        temp_split_path = os.path.dirname(index_path)
-        temp_split_path = os.path.join(temp_split_path, 'temp_split_fold{}.json'.format(fold))
-        with open(temp_split_path, 'w') as outfile:
-            json.dump(current_fold_split, outfile)
-        cfg.dataset.index_path = temp_split_path # to be used in Dataset class for creating sample splitting for current batch
+    # * currently this script is only used for regression tasks including PDBBIND and ATLAS
+    # need to register the name of below datasets in torchdrug.data.__init__.py so that these datasets can be searched by load_config_dict
+    if cfg.dataset["class"] in ["PDBBINDDataset", "MANYDCDataset", "ATLASDataset"]:
+        _dataset = core.Configurable.load_config_dict(cfg.dataset)
+        train_set, valid_set, test_set = _dataset.split()
 
-        # * currently this script is only used for regression tasks including PDBBIND and ATLAS
-        # need to register the name of below datasets in torchdrug.data.__init__.py so that these datasets can be searched by load_config_dict
-        if cfg.dataset["class"] in ["PDBBINDDataset", "ATLASDataset"]:
-            _dataset = core.Configurable.load_config_dict(cfg.dataset)
-            train_set, valid_set, test_set = _dataset.split()
+    task, optimizer, scheduler = cg_util.build_ppi_solver(cfg, train_set, valid_set, test_set)
 
-        # remove current temporary split file
-        os.remove(temp_split_path)
+    # make the task wrapper enter the cuda
+    # only support single GPU in current script
+    device = torch.device(cfg.engine.gpus[0]) if cfg.engine.gpus else torch.device("cpu")
+    if device.type == "cuda":
+        task = task.cuda(device)
 
-        # ** the pre-trained parameters are loaded here for NN and GBT-based decoder **
-        task, optimizer, scheduler = cg_util.build_ppi_solver(cfg, train_set, valid_set, test_set)
+    # use a dataloader extended from Pytorch DataLoader for batching graph structured data
+    # for pretraining phase, sampler = torch_data.DistributedSampler(self.train_set, self.world_size, self.rank) is used to shuffle the original dataset
+    # here, the shuffle function in Pytorch DataLoader is used to have the data reshuffled at every epoch
+    train_loader, valid_loader, test_loader = [ # shuffle=(cfg.dataset["class"] != "PIPDataset")
+        data.DataLoader(dataset, cfg.engine.batch_size, shuffle=True, num_workers=cfg.engine.num_worker)
+            for dataset in [train_set, valid_set, test_set]]
+    # *** please note that for below two types of decoders, GBT only uses train_loader and test_loader, while the MLP needs the all three loaders ***
+    # *** since for MLP, the validation set is explicitly needed for model selection of every epoch, while GBT does not needed ***
+    # *** thus, under current settings, for MLP, the validation set should be explicitly specified when creating data splitting json file ***
+    # *** while for GBT, the validation set can be put into training set when creating jsons, and can be split within the GBT (by specifying the split portion) ***
 
-        # make the task wrapper enter the cuda
-        # only support single GPU in current script
-        device = torch.device(cfg.engine.gpus[0]) if cfg.engine.gpus else torch.device("cpu")
-        if device.type == "cuda":
-            task = task.cuda(device)
+    t0 = time.time()
+    if gbt_pars != None:
+        decoder = GradientBoostingRegressor(**gbt_pars)
+        # currently the encoder parameters have already been loaded
+        MSE, RMSE, MAE, PEARSON = GBT_loop(cfg.train, task, decoder, train_loader, test_loader, cfg.task.get("normalization"), device)
 
-        # use a dataloader extended from Pytorch DataLoader for batching graph structured data
-        # for pretraining phase, sampler = torch_data.DistributedSampler(self.train_set, self.world_size, self.rank) is used to shuffle the original dataset
-        # here, the shuffle function in Pytorch DataLoader is used to have the data reshuffled at every epoch
-        train_loader, valid_loader, test_loader = [ # shuffle=(cfg.dataset["class"] != "PIPDataset")
-            data.DataLoader(dataset, cfg.engine.batch_size, shuffle=True, num_workers=cfg.engine.num_worker)
-                for dataset in [train_set, valid_set, test_set]]
+    else:
+        # in current setting, for downstream tasks, training from scratch and based on pre-training share the same running epochs
+        # record the time of starting training
+        current_time = datetime.now().strftime("%Y_%m_%d_%H_%M")
+        model_save_name = "model_seed{}_bs{}_epoch{}_dim{}_radius{}_{}_extra_{}.pth".format(args.seed, cfg.engine.batch_size, cfg.train.num_epoch,
+                        cfg.task.model.embedding_dim, cfg.task.graph_construction_model.edge_layers[0]["radius"], current_time, cfg.extra)
 
-        # use GBT as the decoder
-        if gbt_pars != None:
-            decoder = GradientBoostingRegressor(**gbt_pars)
-            # currently the encoder parameters have already been loaded
-            MSE, RMSE, MAE, PEARSON = GBT_loop(cfg.train, task, decoder, train_loader, test_loader, cfg.task.get("normalization"), device)
+        best_epoch, best_val = train(cfg.train, task, optimizer, scheduler, train_loader, valid_loader, test_loader, device,
+                                     model_save_name, cfg.dataset["label_path"], cfg.train.get("early_stop"))
 
-            # recording time after GBT training
-            t2 = time.time() # the elpased time is recorded after the testing
-            print(f'total elapsed time of current fold {fold}: {t2 - t1:.4f}')
-            print(f'total elapsed time of the downstream training process: {t2 - t0:.4f}')
+        task.load_state_dict(torch.load(model_save_name))
 
-        # use NN as the decoder
-        else:
-            # in current setting, there is only one model saved for 10-fold CV (i.e., the model of the last fold)
-            # in current setting, for downstream tasks, training from scratch and based on pre-training share the same running epochs
-            if 'embedding_dim' in cfg.task.model.keys():
-                embedding_dim = cfg.task.model.embedding_dim
-            else:
-                embedding_dim = cfg.task.model.hidden_dims[-1]
-            model_save_name = "model_seed{}_bs{}_epoch{}_dim{}_radius{}_{}_extra_{}.pth".format(args.seed, cfg.engine.batch_size, cfg.train.num_epoch,
-                            embedding_dim, cfg.task.graph_construction_model.edge_layers[0]["radius"], current_time, cfg.extra)
+        task.eval()
+        with torch.no_grad():
+            # the task wrapper has already loaded the trained parameters here
+            metric = MLP_test(test_loader, task, max_time=None, device=device)
+        print("TEST metric", metric)
 
-            if fold == 0:
-                train_start_time = time.time()
+        # 'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]'
+        task_suffix = cfg.train.eval_metric.split()[-1]
+        MAE = 'mean absolute error' + ' ' + task_suffix
+        RMSE = 'root mean squared error' + ' ' + task_suffix
+        PEARSON = 'pearsonr' + ' ' + task_suffix
+        MAE, RMSE, PEARSON = float(metric[MAE]), float(metric[RMSE]), float(metric[PEARSON])
 
-            best_epoch, best_val = train(cfg.train, task, optimizer, scheduler, train_loader, valid_loader, test_loader, device,
-                                         model_save_name, cfg.dataset["label_path"], cfg.train.get("early_stop"))
-            
-            if fold == 0:
-                train_end_time = time.time()
-                print(f'actual elapsed time of model training: {train_end_time - train_start_time:.4f}')
-                
-            task.load_state_dict(torch.load(model_save_name))
+    t1 = time.time()
+    print(f'total elapsed time of the downstream training process: {t1 - t0:.4f}')
+    print(f'normal evaluation metrics in current settings, RMSE: {RMSE:.4f}, MAE: {MAE:.4f}, Pearson: {PEARSON:.4f}')
 
-            task.eval()
-            with torch.no_grad():
-                # the task wrapper has already loaded the trained parameters here
-                metric = MLP_test(test_loader, task, max_time=None, device=device)
-            print("TEST metric", metric)
-            
-            if fold == 0:
-                test_end_time = time.time()
-                print(f'actual elapsed time of model testing: {test_end_time - train_end_time:.4f}')
-
-            t2 = time.time() # the elpased time is recorded after the testing
-            print(f'total elapsed time of current fold {fold}: {t2 - t1:.4f}')
-            print(f'total elapsed time of the downstream training process: {t2 - t0:.4f}')
-
-            # explicitly delete the model save for current fold for avoid some unexpected issues
-            if fold < len(split_list) - 1:
-                os.remove(model_save_name)
-
-            # 'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]'
-            task_suffix = cfg.train.eval_metric.split()[-1]
-            MAE = 'mean absolute error' + ' ' + task_suffix
-            RMSE = 'root mean squared error' + ' ' + task_suffix
-            PEARSON = 'pearsonr' + ' ' + task_suffix
-            MAE, RMSE, PEARSON = float(metric[MAE]), float(metric[RMSE]), float(metric[PEARSON])
-
-        print(f'normal evaluation metrics in current fold {fold}, RMSE: {RMSE:.4f}, MAE: {MAE:.4f}, Pearson: {PEARSON:.4f}')
-
-        # same for MLP and GBT-based decoders
-        MAE_total.append(MAE)
-        RMSE_total.append(RMSE)
-        PEARSON_total.append(PEARSON)
-
-    # end of the CV loop
-    # print overall evaluation results
-    print('average RMSE, MAE, and Pearson on test set:', np.mean(RMSE_total), np.mean(MAE_total), np.mean(PEARSON_total))
-    
-    # extra calculation of Standard Deviation (SD) and Standard Error (SE), using n-1/ddof=1, i.e., sample SD 
-    RMSE_SD, MAE_SD, PEARSON_SD = np.std(RMSE_total, ddof=1), np.std(MAE_total, ddof=1), np.std(PEARSON_total, ddof=1)
-    print('sample SD for RMSE, MAE, and Pearson on test set:', RMSE_SD, MAE_SD, PEARSON_SD)
-    
-    RMSE_SE, MAE_SE, PEARSON_SE = RMSE_SD / np.sqrt(len(RMSE_total)), MAE_SD / np.sqrt(len(MAE_total)), PEARSON_SD / np.sqrt(len(PEARSON_total))
-    print('sample SE for RMSE, MAE, and Pearson on test set:', RMSE_SE, MAE_SE, PEARSON_SE)
-    
-    if gbt_pars == None:
-        print('model save name for the last fold:', model_save_name)
 
 
 

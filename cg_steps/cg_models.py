@@ -9,6 +9,56 @@ from torch_scatter import scatter_add
 from torchdrug import layers
 
 
+@R.register("models.CG22_GCN")
+class CG22_GCN(nn.Module, core.Configurable):
+
+    def __init__(self, input_dim, hidden_dims, edge_input_dim=None, short_cut=False, batch_norm=False,
+                 activation="relu", concat_hidden=False, readout="sum"):
+        super(CG22_GCN, self).__init__()
+
+        if not isinstance(hidden_dims, Sequence):
+            hidden_dims = [hidden_dims]
+        self.input_dim = input_dim
+        self.output_dim = sum(hidden_dims) if concat_hidden else hidden_dims[-1]
+        self.dims = [input_dim] + list(hidden_dims)
+        self.short_cut = short_cut
+        self.concat_hidden = concat_hidden
+        print('Use CG22_GCN.')
+
+        self.layers = nn.ModuleList()
+        for i in range(len(self.dims) - 1):
+            self.layers.append(layers.GraphConv(self.dims[i], self.dims[i + 1], edge_input_dim, batch_norm, activation))
+
+        if readout == "sum":
+            self.readout = layers.SumReadout()
+        elif readout == "mean":
+            self.readout = layers.MeanReadout()
+        else:
+            raise ValueError("Unknown readout `%s`" % readout)
+
+    def forward(self, graph, input, all_loss=None, metric=None):
+        hiddens = []
+        layer_input = input
+
+        for layer in self.layers:
+            hidden = layer(graph, layer_input)
+            if self.short_cut and hidden.shape == layer_input.shape:
+                hidden = hidden + layer_input
+            hiddens.append(hidden)
+            layer_input = hidden
+
+        if self.concat_hidden:
+            node_feature = torch.cat(hiddens, dim=-1)
+        else:
+            node_feature = hiddens[-1]
+        graph_feature = self.readout(graph, node_feature)
+
+        return {
+            "graph_feature": graph_feature,
+            "node_feature": node_feature
+        }
+
+
 # Note: this version uses Pytorch Geometric to create adjacent matrix/edge index, not including C++ extension just-in-time (JIT) calculation
 # at the same time, it supports the IEConv layer and extra input hidden embedding layer, etc.
 @R.register("models.CG22_GearNetIEConv")
@@ -156,6 +206,52 @@ class CG22_GearNetIEConv(nn.Module, core.Configurable):
             "graph_feature": graph_feature,
             "node_feature": node_feature
         }
+
+
+class HyboMessagePassing(nn.Module):
+
+    def __init__(self, input_dim, num_relation):
+        super(HyboMessagePassing, self).__init__()
+        # print(input_dim, output_dim, num_relation, edge_input_dim, batch_norm, activation)
+        # 512 512 7 None True relu
+        self.num_relation = num_relation
+        self.input_dim = input_dim
+
+    def message(self, graph, input, edge_input):
+        # input are node features staying in the tangent space of origin
+        node_in = graph.edge_list[:, 0] # source target information
+        message = input[node_in]
+        if edge_input is not None:
+            assert edge_input.shape == message.shape
+            # print(message.size(), edge_input.size())
+            # torch.Size([25458, 22]) torch.Size([25458, 22])
+            message += edge_input
+        return message
+
+    def aggregate(self, graph, message):
+        assert graph.num_relation == self.num_relation
+        node_out = graph.edge_list[:, 1] * self.num_relation + graph.edge_list[:, 2]
+        # print(node_out) # tensor([1592, 2401, 3200, ..., 190898, 199584, 199658], device='cuda:0')
+        # give each edge with different edge types a different target index
+        edge_weight = graph.edge_weight.unsqueeze(-1) # all 1
+        # scatter_sum(src, index, dim, out, dim_size), message: information of source node, src: index of target node
+        update = scatter_mean(message * edge_weight, node_out, dim=0, dim_size=graph.num_node * self.num_relation)
+        # after scatter_add, the message (index) composition: node1+r1,..., node1+r7, ..., node N+r1,..., nodeN+r7
+        # print(update.size()) # torch.Size([203664, 22])
+        update = update.view(graph.num_node, self.num_relation, self.input_dim)
+        return update
+
+    def combine(self, update):
+        # need to combine update (node1+r1,..., node1+r7) without dimension change
+        output = torch.mean(update, dim=1)
+        return output
+
+    # line_graph, edge_hidden
+    def forward(self, graph, input, edge_input=None):
+        message = self.message(graph, input, edge_input)
+        update = self.aggregate(graph, message)
+        output = self.combine(update)
+        return output
 
 
 class GeometricRelationalGraphConv(nn.Module):

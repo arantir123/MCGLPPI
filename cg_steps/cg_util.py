@@ -6,11 +6,12 @@ from torch.optim import lr_scheduler
 from torchdrug.utils import comm
 from torchdrug import core, utils, datasets, models, tasks
 
+
 logger = logging.getLogger(__file__)
 
 
 def build_ppi_solver(cfg, train_set, valid_set, test_set, use_solver=False):
-    task = core.Configurable.load_config_dict(cfg.task) # task wrapper
+    task = core.Configurable.load_config_dict(cfg.task) # PDBBIND task wrapper
 
     # whether to define a solver using core.Engine
     # for the pre-training phase, the solver is explicitly defined
@@ -52,7 +53,6 @@ def build_ppi_solver(cfg, train_set, valid_set, test_set, use_solver=False):
             logger.warning("Load checkpoint from %s" % cfg.model_checkpoint)
         cfg.model_checkpoint = os.path.expanduser(cfg.model_checkpoint)
         model_dict = torch.load(cfg.model_checkpoint, map_location=torch.device('cpu'))
-        # used load_state_dict is in /uni38/Lib/site-packages/torch/nn/modules/module.py
         task.model.load_state_dict(model_dict)
         # print(model_dict.keys())
 

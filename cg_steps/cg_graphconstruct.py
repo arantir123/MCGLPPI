@@ -7,6 +7,7 @@ from torchdrug.core import Registry as R
 from cg_steps.cg_protein import CG22_PackedProtein
 
 
+# ** should be registered in torchdrug.layers.geometry.__init__, for to be searched by the register function **
 @R.register("layers.CG22_GraphConstruction")
 class CG22_GraphConstruction(nn.Module, core.Configurable):
     """
@@ -81,17 +82,33 @@ class CG22_GraphConstruction(nn.Module, core.Configurable):
     # replace the residue type embeddings of end nodes with bead type embeddings
     def edge_cg22_gearnet(self, graph, edge_list, num_relation):
         node_in, node_out, r = edge_list.t() # target node, source node
+        
         in_bead_type, out_bead_type = graph.atom_type[:, 0][node_in], graph.atom_type[:, 0][node_out] # atom_type: bead, res, bead_pos
         residue_in, residue_out = graph.bead2residue[node_in], graph.bead2residue[node_out]
         sequential_dist = torch.abs(residue_in - residue_out) # sequential distance
         spatial_dist = (graph.node_position[node_in] - graph.node_position[node_out]).norm(dim=-1) # Euclidean distance
+        # print(in_bead_type, out_bead_type, in_bead_type.size(), out_bead_type.size())
+        # tensor([ 4,  7,  1,  ..., 10, 10,  8], device='cuda:0'), tensor([ 4,  4,  4,  ...,  7,  8, 10], device='cuda:0'), torch.Size([138788]) torch.Size([138788])
+        # print(sequential_dist, sequential_dist.size())
+        # tensor([ 1, 38,  1,  ..., 38,  1,  0], device='cuda:0'), torch.Size([86698])
 
         return torch.cat([
             # bead type encoding, length: 17 in total
             functional.one_hot(in_bead_type, len(graph.martini22_name2id.keys())),
             functional.one_hot(out_bead_type, len(graph.martini22_name2id.keys())),
+            # * for testing the importance of bead type feature (also need to modify the corresponding position in cg_task_preprocess/predict function) *
+            # * the above is the corresponding original settings *
+            # functional.one_hot(torch.ones_like(in_bead_type), len(graph.martini22_name2id.keys())),
+            # functional.one_hot(torch.ones_like(out_bead_type), len(graph.martini22_name2id.keys())), 
+            
             functional.one_hot(r, num_relation),
+            
+            # bead sequence distance encoding
             functional.one_hot(sequential_dist.clamp(max=self.max_seq_dist), self.max_seq_dist + 1), # 0-10, 11 in total
+            # * for testing the importance of bead sequence distance encoding *
+            # * the above is the corresponding original settings *
+            # functional.one_hot(torch.ones_like(sequential_dist), self.max_seq_dist + 1),
+            
             spatial_dist.unsqueeze(-1)
         ], dim=-1)
 
@@ -100,7 +117,7 @@ class CG22_GraphConstruction(nn.Module, core.Configurable):
             graph = layer(graph)
         return graph
 
-    # *** in current mode, only the first edge_layer function in input list is supported ***
+    # ** in current mode, only the first edge_layer function in input list is supported **
     def apply_edge_layer(self, graph):
         if not self.edge_layers:
             return graph

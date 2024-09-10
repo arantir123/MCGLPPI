@@ -64,7 +64,7 @@ class CG22_Protein(Molecule):
 
     def __init__(self, edge_list=None, bead_type=None, bead2residue=None, bond_type=None, residue_type=None, aa_sequence=None, view=None,
                  backbone_angles=None, backbone_sidec_angles=None, sidechain_angles=None, backbone_dihedrals=None, **kwargs):
-        # 1. currently (only) edge_list index is set to starting from 0, while the index (for edges, angles, and dihedrals, etc.) in orginial CG itp files starts from 1
+        # 1. currently (only) edge_list index is set to start from 0, while the index (for edges, angles, and dihedrals, etc.) in orginial CG itp files starts from 1
         # 2. initialize the ancestral molecule and graph classes with edge_list and num_node (contained in kwargs recording bead number for current protein)
         # 3. store the CG-level bead_type, bond_type (only containing bond types provided in cg itp files), node_position into molecule class as self.atom_type, self.bond_type, self.node_position
         # 4. kwargs.keys(): dict_keys(['node_position', 'num_node', 'num_relation']) for finding defined hyperparameters in ancestral class
@@ -234,13 +234,7 @@ class CG22_Protein(Molecule):
         for itp_path in itp_paths:
             with open(itp_path) as f:
                 itp_lines = f.readlines()
-            # * update the logic of generating keys of itp_lines_dict: *
-            # original:
-            # itp_lines_dict[os.path.basename(itp_path).split('.')[0]] = itp_lines # keys: Protein_A, Protein_D (to identify chains)
-            # update (for handling the itp name with '.', if '.' contains in the name, the above key generation is wrong like below):
-            # print(os.path.basename(itp_path), os.path.basename(itp_path).split('.'))
-            # MT-1AO7_E63Q.K66A_A.A_WT_nan_WT-cg_B.itp ['MT-1AO7_E63Q', 'K66A_A', 'A_WT_nan_WT-cg_B', 'itp']
-            itp_lines_dict[os.path.basename(itp_path)[:-4]] = itp_lines
+            itp_lines_dict[os.path.basename(itp_path).split('.')[0]] = itp_lines # keys: Protein_A, Protein_D (to identify chains)
 
         # CG pdb file
         cg_pdb_path = os.path.join(cgfile, pdb + '-' + 'cg.pdb')
@@ -296,7 +290,6 @@ class CG22_Protein(Molecule):
                     # chain_list.append('Protein' + '_' + current_chain)
                     chain_list.append(pdb_name + '-cg' + '_' + current_chain)
         chain_list = sorted(list(set(chain_list)))
-        # print(chain_list, cg_itp_info.keys())
 
         # assign bead counter for each chain
         node_position_, cb_token_list_, local_variable = {chain: [] for chain in chain_list}, {chain: [] for chain in chain_list}, locals()
@@ -355,7 +348,7 @@ class CG22_Protein(Molecule):
         chain_bead_num, chain_aa_num, residue_type = [], [], [] # record the bead and aa numbers following the order of current chain_list (can be zipped with the chain_list)
         # * for bead_type: need to collect the bead number of each chain (following the chain_list order), for generating absolute (bead node) idx for current protein *
 
-        # should not be influenced by extra 'TER' as currently processing the re-numbered itp info
+        # should not be influenced by extra 'TER' as currently processing re-numbered itp info
         for chain in chain_list:
             chain_bead_info = cg_itp_info[chain]['atom']
             chain_aa_info = cg_itp_info[chain]['sequence']
@@ -454,7 +447,6 @@ class CG22_Protein(Molecule):
             contact_matrix = aa_square_distance[:aa_num_chain[0], aa_num_chain[0]:]
             # get the closest distance within the contact matrix
             closest_distance = torch.sqrt(torch.min(contact_matrix))
-
             contact_matrix = (contact_matrix <= contact_threshold ** 2) # 6A**2
             contact_matrix = torch.nonzero(contact_matrix)
             contact_aa_index = torch.cat([contact_matrix[:, 0], contact_matrix[:, 1] + aa_num_chain[0]])
@@ -464,16 +456,9 @@ class CG22_Protein(Molecule):
             # (3) based on the found contact AAs and cropping threshold to retain proteins
             # any AAs having distance to contact AAs smaller than cropping threshold will be retained
             # the distance for retaining these AAs is also based on aforementioned inter-BB distance
-            # ** in every selected aa_square_distance[contact_aa_index] row, the position representing current AA must be zero (identity itself) **
-            # ** in this case, all contact AAs calculated above will be retained during residue_mask-based graph cropping **
             retain_matrix = (aa_square_distance[contact_aa_index] <= cropping_threshold ** 2)
-            # ** torch.Size([7, 195]), for its each row/AA, the position for current AA in this row should be True (diagonality of aa_square_distance) **
-            # ** therefore torch.nonzero(retain_matrix)[:, 0] is not needed here **
-
-            # print('the maximum distance within the distance matrix of selected contact AAs:',
-            #       torch.max(torch.sqrt(torch.clamp(aa_square_distance[contact_aa_index], min=0))))
-            # maximum: 58.5827 in the subset of ATLAS (based on contact_threshold == 8.5A)
-
+            # torch.Size([7, 195]), for its each row/AA, the position for current AA in this row should be True (diagonality of aa_square_distance)
+            # therefore torch.nonzero(retain_matrix)[:, 0] is not needed here
             retain_aa_index = torch.unique(torch.nonzero(retain_matrix)[:, 1], sorted=True)
 
             return self.residue_mask(retain_aa_index, compact=compact), closest_distance
@@ -1006,9 +991,32 @@ def get_coords(line):
 
 
 # the class for combining multiple CG_Protein objects into one batch-graph object
-# Note: functions which are not utilized in current implementation are incomplete for processing CG22_Protein objects
+# Note: functions which are not utilized in current CGDiff implementation are incomplete for processing CG22_Protein objects
 # which will be further updated in the future, e.g., the detach and clone functions, needing the support of handling angle info
 class CG22_PackedProtein(PackedMolecule, CG22_Protein):
+    """
+    Container for proteins with variadic sizes.
+    Support both residue-level and atom-level operations and ensure consistency between two views.
+    .. warning::
+        Edges of the same graph are guaranteed to be consecutive in the edge list.
+        The order of residues must be the same as the protein sequence.
+        However, this class doesn't enforce any order on nodes or edges.
+        Nodes may have a different order with residues.
+    Parameters:
+        edge_list (array_like, optional): list of edges of shape :math:`(|E|, 3)`.
+            Each tuple is (node_in, node_out, bond_type).
+        atom_type (array_like, optional): atom types of shape :math:`(|V|,)`
+        bond_type (array_like, optional): bond types of shape :math:`(|E|,)`
+        residue_type (array_like, optional): residue types of shape :math:`(|V_{res}|,)`
+        view (str, optional): default view for this protein. Can be ``atom`` or ``residue``.
+        num_nodes (array_like, optional): number of nodes in each graph
+            By default, it will be inferred from the largest id in `edge_list`
+        num_edges (array_like, optional): number of edges in each graph
+        num_residues (array_like, optional): number of residues in each graph
+        offsets (array_like, optional): node id offsets of shape :math:`(|E|,)`.
+            If not provided, nodes in `edge_list` should be relative index, i.e., the index in each graph.
+            If provided, nodes in `edge_list` should be absolute index, i.e., the index in the packed graph.
+    """
 
     unpacked_type = CG22_Protein
     _check_attribute = CG22_Protein._check_attribute
