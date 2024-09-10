@@ -87,9 +87,9 @@ class CG22_GraphConstruction(nn.Module, core.Configurable):
         sequential_dist = torch.abs(residue_in - residue_out) # sequential distance
         spatial_dist = (graph.node_position[node_in] - graph.node_position[node_out]).norm(dim=-1) # Euclidean distance
         # print(in_bead_type, out_bead_type, in_bead_type.size(), out_bead_type.size())
-        # tensor([ 4,  7,  1,  ..., 10, 10,  8], device='cuda:0'), tensor([ 4,  4,  4,  ...,  7,  8, 10], device='cuda:0'), torch.Size([138788]) torch.Size([138788])
+        # tensor([4, 7, 1, ..., 10, 10, 8], device='cuda:0'), tensor([4, 4, 4, ..., 7, 8, 10], device='cuda:0'), torch.Size([138788]), torch.Size([138788])
         # print(sequential_dist, sequential_dist.size())
-        # tensor([ 1, 38,  1,  ..., 38,  1,  0], device='cuda:0'), torch.Size([86698])
+        # tensor([1, 38, 1, ..., 38, 1, 0], device='cuda:0'), torch.Size([86698])
 
         return torch.cat([
             # bead type encoding, length: 17 in total
