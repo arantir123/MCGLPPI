@@ -7,7 +7,6 @@ from torchdrug.core import Registry as R
 from torch_scatter import scatter_min
 
 
-# ** should be registered in torchdrug.layers.geometry.__init__, for to be searched by the register function **
 @R.register("layers.geometry.AdvSpatialEdge")
 class AdvSpatialEdge(nn.Module, core.Configurable):
     """
