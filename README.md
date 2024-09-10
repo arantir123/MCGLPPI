@@ -61,7 +61,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
 4. As a reference of the corresponding pre-training scripts in the original scale, we also clone the original ones in this repository (in siamdiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
    
-Tried today :( Still on construction...
+__Step3. Downstream protein complex overall property predictions based on w/ or w/o pre-trained CG graph encoder.__
 
 ## Quick start ##
 
