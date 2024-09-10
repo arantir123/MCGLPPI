@@ -83,6 +83,8 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    /config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml (MARTINI2)
 
+   /config/ppi_cg3/cg3_pdbbind_gearnet_gbt.yaml (MARTINI3)
+
 
 
 
