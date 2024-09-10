@@ -1,4 +1,4 @@
-# large noise level stage (larger number of noise levels will be considered during the diffusion process)
+# large noise level stage (larger number of noise levels will be considered during this diffusion process)
 # while the noise magnitude of each noise level is also determined by sigma_begin and sigma_end
 output_dir: pretrained_cgmodels
 
@@ -6,13 +6,11 @@ dataset:
   class: _3did
 
   # path for storing original data files
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large/
-  path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_maml_subset/
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict/
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict_subset/
+  # path: /3did/3did_data_large/
+  path: /3did/3did_data_large_strict/
 
   # path for storing the processed output storage pickle file
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/
+  output_path: /3did/
   
   # the name of the output pickle file (for creation and re-read)
   # pickle_name: _3did_large.pkl.gz
