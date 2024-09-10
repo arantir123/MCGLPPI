@@ -9,7 +9,6 @@ import pprint
 from torchdrug.utils import comm
 from torchdrug import core, models, tasks, datasets, utils
 
-# import these here to make load_config_dict identify these registered functions when calling the main function
 from siamdiff import dataset, model, task, transform
 # new added import for performing CG-scale pre-training
 from cg_steps import cg_pretraining_dataset, cg_edgetransform, cg_graphconstruct, cg_models, cg_protein, cg_task_preprocess_type1
@@ -17,9 +16,9 @@ from cg_steps import cg_pretraining_dataset, cg_edgetransform, cg_graphconstruct
 
 def save(solver, path, save_model=True):
     if save_model:
-        model = solver.model.model      # only save the encoder
+        model = solver.model.model # only save the encoder
     else:
-        model = solver.model            # save both the encoder and prediction head
+        model = solver.model # save both the encoder and prediction head
 
     if comm.get_rank() == 0:
         logger.warning("Save checkpoint to %s" % path)
@@ -29,23 +28,6 @@ def save(solver, path, save_model=True):
     comm.synchronize()
 
 
-# points to be improved:
-# 1. in CG scale, the way of generating conformers could be improved (based on adding gaussion noise to every coordinate dim of every protein graph node, similar to structure forward diffusion (to be improved too))
-# 2. the truncated protein length hyparparameter could be adjusted according to the cropped (interacting region) protein size in each downstream task
-# 3. the radius edge can distinguish whether its two end nodes are from the same residue or not, and it also can be enhanced by CG itp defined edges (if applicable, the duplicate edge reduction maybe also needed)
-# 4. in the atom-level gearnet-edge, the edge features used are still based on one-hot residue-type encoding, which may need to be further improved for CG-level models (e.g., adding inter-node unit position vectors)
-# 5. diffusion-based adding noise will add noise to every node with scale controlled by step number, while our previous method adds noise based on part structures of part of residues, try to establish connections
-# considering whether we can add domain knowledge-based noise into diffusion process, to make it more reasonable
-# 6. introduce the bond angle and dihedral angle information provided in CG itp files, as the potential features for node edges (may via context manager)
-# 7. 实际上，对于预训练的两个阶段，对于第二个阶段的*序列*噪声添加，其实使用的噪声强度/方式和第一阶段是一样的，只是第二阶段由于噪声间隔设置的较少，所以序列mask只有相对较少的几种选择（但强度范围和阶段一应该是基本一致的）
-# 而对于*结构*噪声添加，是主要基于两个阶段计算出的cumprod alpha值，由于第二阶段该值很小（如上），所以第二阶段对蛋白质构象添加的噪声影响很小，符合原论文描述（但序列噪声的强度范围仍和第一阶段保持一致，只是可选范围变少）
-# 针对上述的两阶段噪声添加规则，或许可做出进一步改进（对噪声加入先验，或者修改噪声添加方式），以更好的联合建模蛋白质的结构信息和序列信息
-# 8. add the GVP model as the encoder and further improve it to adapt current graph structure
-# 9. current edge features include residue type, which may cause information leakage when performing masked AA type recovery, which may be changed to cg bead type information
-
-# 10. in current pre-training and downstream setting, the edge number established for each protein seems small, maybe the radius graph cutoff should also be carefully tuned
-# 11. implement VAE-based pre-training task, test the performance influence caused by truncated length
-# 12.（1）实现atom以及residue尺度的预训练代码，（2）移除下游重复样本，（3）实现ATLAS代码（也可考虑8-1-1划分），（4）跑不同batch size实验
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
@@ -63,7 +45,6 @@ if __name__ == "__main__":
         logger.warning("Output dir: %s" % working_dir)
 
     # configure dataset class
-    # need to register the name of '_3did' in torchdrug.data.__init__.py so that _3did class can be searched by load_config_dict
     dataset = core.Configurable.load_config_dict(cfg.dataset)
 
     # solver includes the task wrapper which contain the model parameters
