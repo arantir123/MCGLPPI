@@ -1,0 +1,150 @@
+# output_dir: F:/UOB/External Dataset/PDBBIND/scratch/downstream_outputs
+output_dir: downstream_cgmodels/cg_PDBBIND/
+
+dataset:
+  class: PDBBINDDataset
+
+  # the path for storing the downstream source data
+  # data_path: C:/Users/Yang Yue/Desktop/simulation_dataset/MARTINI3/ # toy source path
+  # data_path: F:/UOB/External Dataset/PDBbind_source/pdbbind_dimer_strict/ # strict dimer path
+  # data_path: F:/UOB/External Dataset/PDBbind_source/pdbbind_dimer_strict_subset/ # strict dimer subset path
+  # data_path: F:/UOB/External Dataset/PDBbind_source/m3_pdbbind_dimer_strict/ # m3 strict dimer path
+  # data_path: F:/UOB/External Dataset/PDBbind_source/m3_pdbbind_dimer_strict_subset/ # m3 strict dimer subset path
+  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/pdbbind/
+
+  # the path for storing the output processed pickle file
+  # output_path: C:/Users/Yang Yue/Desktop/simulation_dataset/ # toy output path
+  # output_path: F:/UOB/External Dataset/PDBbind_source/ # local output path
+  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/pdbbind/
+
+  # the path for storing the index of dataset splitting
+  # index_path: C:/Users/Yang Yue/Desktop/simulation_dataset/cg3_pdbbind_toy_split.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_10CV_index_seed512.jsonl 
+  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_af2subset_10CV_index_standard_seed512.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_af2subset_tmscore0.45_tmscore0.55.jsonl
+  index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed512.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_tmscore0.45_tmscore0.55.jsonl
+
+  # the path for storing all label information of current dataset
+  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/PDBBIND/PDBBIND.csv
+  label_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBIND.csv
+
+  # indicating current used data source pickle file (creating it if it does not exist)
+  # pickle_name: cg3_pdbbind_toy.pkl.gz
+  # pickle_name: cg3_pdbbind_strictdimer.pkl.gz
+  pickle_name: cg3_pdbbind_strictdimer_subset.pkl.gz
+  # pickle_name: cg3_af2_pdbbind_strictdimer_subset.pkl.gz # 911-915-subset
+
+  use_extra_label: True # determine whether to use extra dG label rather than the pkd label
+  cropping_threshold: 10 # the cropping function is performed on-the-fly
+  contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
+  # currently no transform functions are needed, the node and edge features can be generated in task.forward and CG3_GraphConstruction separately
+
+task:
+  class: PDBBIND
+  angle_enhance: True
+  normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
+
+  # the hyper-parameters for MLP-based decoder
+  num_mlp_layer: 3
+  mlp_batch_norm: True # default: True
+  mlp_dropout: 0 # default: 0
+
+  # the hyper-parameters for GBT-based decoder (use it when gbt_use exists)
+  # gbt_use:
+    # learning_rate: 0.01
+    # max_depth: 8
+    # max_features: 'sqrt'
+    # min_samples_split: 4
+    # n_estimators: 10000
+    # subsample: 0.7
+    # # n_iter_no_change: None
+    # # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
+    # validation_fraction: 0.1
+
+  model:
+    class: CG22_GearNetIEConv
+    input_dim: 31 # bead type number (23) + 4*2 angle features (angle_enhance=True)
+    # input_dim: 23 # bead type number
+    
+    hidden_dims: [256, 256, 256, 256, 256, 256]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: sum
+    # num_relation: 1 # original relation number (only containing radius edges)
+    num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+
+    edge_input_dim: 65 # cg3_gearnet: 58 + num_relation
+    # edge_input_dim: 59 # gearnet: 52 + num_relation
+    num_angle_bin: 8
+    # extra hyperparameter for GearNetIEConv-based models:
+    embedding_dim: 256 # extra linear embedding layer
+    # layer_norm: True
+    # dropout: 0.2
+    # use_ieconv: True
+
+  graph_construction_model:
+    class: CG3_GraphConstruction
+    edge_layers:
+      # - class: SpatialEdge
+        # radius: 4.5
+        # min_distance: 0
+      - class: AdvSpatialEdge
+        radius: 5 # empirically, MARTINI-based edge cutoff can also be tried starting from 4A~5A
+        min_distance: 0
+        across_res_mask: True # distinguish whether bead nodes are across two residues or not
+        cg_edge_enhance: True # enhance the radius edge with CG defined edges
+        cg_edge_reduction: False # whether to remove the duplicate CG edges on the top of the radius edges
+    edge_feature: cg3_gearnet # input attribute of initialization function of CG3_GraphConstruction
+    # edge_feature: gearnet
+
+optimizer:
+  class: Adam
+  lr: 1.0e-4
+
+  # class: SGD
+  # lr: 1.0e-3
+  # weight_decay: 5.0e-4
+  # # weight_decay: 0
+  # momentum: 0.98
+
+# scheduler:
+#   class: ReduceLROnPlateau
+#   mode: max
+#   factor: 0.6
+#   patience: 5
+#   class: StepLR
+#   step_size: 50
+#   gamma: 0.5
+
+engine:
+  gpus: [0]
+  batch_size: 64
+  # new hyperparameter compared with pretraining phase
+  num_worker: 0 # default: 4 (not applicable in laptop)
+
+# model_checkpoint: {{ ckpt }}
+# diffusion denoising pretraining (local):
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_1_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_1.1_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
+
+train:
+  model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
+  num_epoch: 150 # 150 for 10 CV / 30 for tm-score
+  early_stop: 40 # 40 for 10CV / 10 for tm-score
+
+  # * comment out the time limitation hyperparameters for comparing time used for CG-based models with models based on residue and atoms scales *
+  # * please note that these hyperparameters are only used for train/val/test sets during model training, the final independent test set is not influenced by these *
+  # train_time: 120
+  # val_time: 20
+  # test_time: 100
+
+  # the specified metric controlling the best model saved based on best-val
+  # {'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]')}
+  # eval_metric: root mean squared error [binding_affinity]
+  eval_metric: pearsonr [binding_affinity]
+
+# extra information attached to the saved model name
+extra: 0
