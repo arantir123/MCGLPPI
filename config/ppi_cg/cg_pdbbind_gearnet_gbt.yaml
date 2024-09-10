@@ -5,21 +5,22 @@ dataset:
   class: PDBBINDDataset
 
   # the path for storing the downstream source data
-  data_path: MCGLPPI/downstream_files/PDBBIND/pdbbind_dimer_strict/ # 1270-set
-  # data_path: MCGLPPI/downstream_files/PDBBIND/pdbbind_dimer_strict_subset/ # 915-subset
+  # data_path: MCGLPPI/downstream_files/PDBBIND/pdbbind_dimer_strict/ # 1270-set
+  data_path: MCGLPPI/downstream_files/PDBBIND/pdbbind_dimer_strict_subset/ # 915-subset
 
   # the path for storing the output processed (model input) pickle file
   output_path: MCGLPPI/downstream_files/PDBBIND/
 
   # the path for storing the index of dataset splitting
-  index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl # 1270-set
-  # index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl # 915-subset
+  # index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_10CV_index_seed512.jsonl # 1270-set
+  index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl # 915-subset
 
   # the path for storing all label information of current dataset
   label_path: MCGLPPI/downstream_files/PDBBIND/PDBBIND.csv
 
   # indicating current used (model input) pickle file (creating it if it does not exist)
-  pickle_name: cg_pdbbind_strictdimer_subset.pkl.gz
+  # pickle_name: cg2_pdbbind_strictdimer.pkl.gz # 1270-set
+  pickle_name: cg2_pdbbind_strictdimer_subset.pkl.gz # 915-subset
 
   use_extra_label: True # determine whether to use extra dG label rather than the pkd label (True: predicting dG labels)
   cropping_threshold: 10 # the cropping function is performed on-the-fly
@@ -31,7 +32,7 @@ task:
   angle_enhance: True
   normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
 
-  # the hyper-parameters for NN-based decoder
+  # the hyper-parameters for MLP-based decoder
   num_mlp_layer: 3
   mlp_batch_norm: True
   mlp_dropout: 0.5
@@ -52,11 +53,13 @@ task:
     class: CG22_GearNetIEConv
     input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
     # input_dim: 17 # bead type number
+    
     hidden_dims: [256, 256, 256, 256, 256, 256]
     batch_norm: True
     concat_hidden: True
     short_cut: True
     readout: sum
+    
     # num_relation: 1 # original relation number (only containing radius edges)
     num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
     edge_input_dim: 53 # cg22_gearnet: 46 + num_relation
