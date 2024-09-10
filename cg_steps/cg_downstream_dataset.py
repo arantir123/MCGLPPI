@@ -36,7 +36,7 @@ class PPIDataset:
 # Note: input a two-instance interacting complex and output its pkd score (regression task, loss: MSE, metrics: MSE, MAE, Pearsonr)
 # the contact residue identification could be used
 @R.register("datasets.PDBBINDDataset")
-# ** need to consider extra (1) protein cropping function (transform function), (2) label handling, (3) dataset splitting **
+# * need to consider extra (1) protein cropping function (transform function), (2) label handling, (3) dataset splitting *
 class PDBBINDDataset(data.ProteinDataset, PPIDataset):
     # data_path: source data path, output_path: output pickle path, index_path: data splitting path
     def __init__(self, data_path, output_path, index_path, label_path, pickle_name='cg_pdbbind.pkl.gz', transform=None, AA_num_threshold=5000, raw_label_col='neg_log',
