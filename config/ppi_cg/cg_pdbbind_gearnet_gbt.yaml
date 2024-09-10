@@ -100,6 +100,7 @@ engine:
   batch_size: 64 # default: 64
   num_worker: 0
 
+# comment out the 'model_checkpoint' argument to enable training-from-scratch
 # model_checkpoint: {{ ckpt }}
 # diffusion denoising pretraining (specify the pretrained CG graph encoder location below):
 model_checkpoint: MCGLPPI/pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
