@@ -77,6 +77,8 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    https://drive.google.com/file/d/14-0QF0b8JeXUU57yMzTdTPzvsNP_ayUv/view?usp=sharing (MARTINI2 and MARTINI3)
 
+3. After the preparation of the source data for MCGLPPI, the running scripts can be used to evaluate the model performance based on different data splitting settings. Please follow the illustration in corresponding scripts to set the hyper-parameters for evaluation configurations (the data splitting file and whether to use the pre-trained graph encoder checkpoints can be specified in these scripts):
+
    
 ## Quick start ##
 
