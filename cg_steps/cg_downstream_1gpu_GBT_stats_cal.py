@@ -284,6 +284,7 @@ def GBT_test(dataset, model, max_time=None, device=None):
     return pred, target
 
 
+# * this script does not support the 10-fold cross validation *
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
