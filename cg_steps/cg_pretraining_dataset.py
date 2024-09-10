@@ -1,4 +1,4 @@
-# currently consider directly read the CG original files (organized as the original generation form)
+# * currently consider directly read the CG original files (organized as the original generation form from MARTINI) *
 import os
 import logging
 import warnings
@@ -112,14 +112,6 @@ class _3did(data.ProteinDataset):
             "#sample: %d" % len(self),
         ]
         return "%s(\n  %s\n)" % (self.__class__.__name__, "\n  ".join(lines))
-
-
-if __name__ == "__main__":
-    # Dataset function test
-    test_input_path = 'D:/PROJECT B2_5/note/CG_summary/cg_demo_martini22/'
-    # the path for storing the output processed pickle file of 3did
-    test_output_path = 'D:/PROJECT B2_5/note/CG_summary/cg_demo_martini22_output/'
-    dataset = _3did(test_input_path, test_output_path)
 
 
 
