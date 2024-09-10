@@ -170,7 +170,7 @@ class PDBBINDDataset(data.ProteinDataset, PPIDataset):
             with open(os.path.join(head_path, "must_incomplete_itp.txt"), "w") as f:
                 f.writelines([line + '\n' for line in self.must_incomplete])
 
-    # ** need to support the protein cropping for further decreasing computational cost and extracting core regions **
+    # * need to support the protein cropping for further decreasing computational cost and extracting core regions *
     def get_item(self, index):
         # ** original 'clone' function for a protein is located in the basic 'graph' class, we re-write it in 'cg_protein' class **
         # ** clone a protein object, transform function will be performed on it later (change view and crop graph for this clone) **
@@ -461,8 +461,8 @@ class ATLASDataset(PDBBINDDataset):
         pkl_file = os.path.join(self.output_path, self.pickle_name)
         print('current output path for outputting processed pickle data file:', pkl_file)
 
-        # ** for the label type to be predicted, only dG is selected for cross-validation, while ddG would be only used for case study due to its incompleteness **
-        # ** for the used dG label, the missing dG label can be filled using the corresponding kd label (if it exists) based on -1.3363 * -np.log10(kd * (1e-6)) **
+        # * for the label type to be predicted, only dG is selected for cross-validation, while ddG would be only used for case study due to its incompleteness *
+        # * for the used dG label, the missing dG label can be filled using the corresponding kd label (if it exists) based on -1.3363 * -np.log10(kd * (1e-6)) *
         # * the label file can be complete (rather than only including labels of subset of original dataset) *
         self.label_dict, self.extra_label_dict = self.create_labels(label_path=label_path, label_type=raw_label_col)
 
