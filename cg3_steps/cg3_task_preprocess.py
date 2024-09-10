@@ -404,10 +404,10 @@ class CGDiff(tasks.Task, core.Configurable):
 
         # ** 对于当前cg版本的序列diffusion任务，其本身可能是trivial的，因为对于要mask的残基，需要保留至少一个cg节点（也就是BB）去生成residue-level的embedding来recover被mask掉的AA类型 **
         # ** 但对于保留的BB节点，其节点特征one-hot BB类型就包含了一些关于AA倾向的信息（也就是通过BB类型就可以缩小其所属的AA种类），在这种情况下，AA类型recovery任务会变得相对容易，可能影响预训练效果 **
-        # ** 所以可能需要考虑去掉序列diffusion任务（比如取一个略大于1的gamma值屏蔽序列任务，例如1.1）或者考虑合理地mask掉这些BB节点的相关节点特征（将这些节点的BB类型节点特征mask掉） **
-        # ** 也就是说，需要一个载体节点，用于对mask掉的residue去做recovery，并且需要这个载体不泄露AA类型信息 ***
+        # ** 所以可能需要考虑去掉序列diffusion任务（比如取一个略大于1的gamma值屏蔽序列任务，例如1.1）或者考虑合理地mask掉这些BB节点的相关节点特征（将这些节点的BB类型节点特征mask掉）**
+        # ** 也就是说，需要一个载体节点，用于对mask掉的residue去做recovery，并且需要这个载体不泄露AA类型信息 **
 
-        # ** 原本的序列diffusion实现：
+        # ** 原本的序列diffusion实现：**
         # ** 也就是说，应该原本的原子节点特征包含18维的原子类型，以及21维的AA类型，在预训练过程中，若使用序列diffusion，会将需要mask的残基所对应的侧链原子全部去掉 **
         # ** 最终仅保留不需要mask的残基中的全部原子节点以及要mask的残基的主干原子节点，并且对于所有的剩余原子节点，需要关闭其AA类型特征，以免在AA type recovery时造成影响 **
         # ** 上述的描述是针对原子尺度的预训练，对于残基尺度，会保留所有的残基节点（node_mask应该是完整的），只是通过下面的with graph1.residue()关闭需要mask的残基节点的特征 **
