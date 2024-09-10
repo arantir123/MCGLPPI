@@ -1,8 +1,7 @@
 # * small noise level stage (fewer number of noise levels will be considered during this diffusion process) *
 # * while the noise magnitude of each noise level is also determined by sigma_begin and sigma_end *
-# under current setting, as sigma_begin and sigma_end are the same (1.0e-4), leading to the beta value for each noise level (5 in total) is the same (in stage1, it varies in different levels)
+# under current setting, as sigma_begin and sigma_end are the same (1.0e-4), leading to the beta value for each noise level (5 in total) is the same (in stage 1, it varies in different levels)
 # thus, the cumprod alpha is very large, representing there is few noise added during the second stage
-# output_dir: D:/PROJECT B2_5/data/raw_data/scratch/cgdiff_outputs
 output_dir: pretrained_cgmodels
 
 # print(noise_level, self.alphas, self.alphas.shape[0])
