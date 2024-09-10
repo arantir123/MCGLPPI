@@ -12,7 +12,6 @@ from torchdrug.models import GearNet
 @R.register("tasks.CGDiff")
 # * in order to make load_config_dict identify this registered function, need to import CGDiff in the main function *
 class CGDiff(tasks.Task, core.Configurable):
-
     """
     Parameters:
         model (nn.Module): the protein structure encoder to be pre-trained
