@@ -744,7 +744,7 @@ class PDBBIND(tasks.PropertyPrediction):
         sidechain_angles = self.angle_generator(graph, sidechain_angles, sidechain_angles_center)
         backbone_dihedrals = self.dihedral_generator(graph, backbone_dihedrals, backbone_dihedrals_center)
 
-        # print(torch.sum(backbone_angles), torch.sum(backbone_sidec_angles), torch.sum(sidechain_angles), torch.sum(backbone_dihedrals))  # there are some errors if all values are 0
+        # print(torch.sum(backbone_angles), torch.sum(backbone_sidec_angles), torch.sum(sidechain_angles), torch.sum(backbone_dihedrals)) # there are some errors if all values are 0
         # tensor(10711.6709, device='cuda:0') tensor(9069.5059, device='cuda:0') tensor(5036.0410, device='cuda:0') tensor(2072.2786, device='cuda:0')
 
         if graph_node_feats != None:
