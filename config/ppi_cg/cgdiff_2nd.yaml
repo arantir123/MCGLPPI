@@ -48,7 +48,7 @@ task: # smaller values compared with the pretraining phase 1
   
   sigma_begin: 1.0e-4 # 1: 1.0e-3
   sigma_end: 1.0e-4 # 1: 0.1
-  num_noise_level: 5 # 1: 5, less num_noise_level from -6~6
+  num_noise_level: 5 # 1: 100, less num_noise_level from -6~6
   gamma: 0.2 # default: 0.2, step1 default: 0.5, less ratio for the structural loss
   use_MI: False
   
@@ -58,8 +58,6 @@ task: # smaller values compared with the pretraining phase 1
   angle_enhance: True # whether to use the angle information provided in itp file as auxiliary bead node features
 
   model: # same to the model structure in phase 1
-    # class: GearNet
-    # class: CG22_GearNet
     class: CG22_GearNetIEConv
     input_dim: 25 # bead type number + 4*2 angle features (angle_enhance=True)
     # input_dim: 17 # bead type number
@@ -80,7 +78,6 @@ task: # smaller values compared with the pretraining phase 1
     # dropout: 0.2
     # use_ieconv: True
 
-  # only spatial edge used here (atom scale)
   graph_construction_model:
     class: CG22_GraphConstruction
     edge_layers:
@@ -100,10 +97,9 @@ optimizer:
   class: Adam
   lr: 1.0e-4
 
-engine: # the setting of gpus and batch_size can be further tuned based on current datasets
-  # gpus: [0, 1, 2, 3]
+engine: 
   gpus: [0]
-  batch_size: 64 # default: 32 for gamma=1.1
+  batch_size: 64
   log_interval: 100
 
 save_interval: 5 # save model every 'save_interval' epoch
@@ -111,17 +107,13 @@ save_model: True # only save the encoder
 
 # set to None: no pre-trained model will be loaded
 # model_checkpoint: {{ ckpt }}
-model_check_point: cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_step1_0_maml3did_bbfeatsFalse_miFalse.pth
 # model_check_point: cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_step1_0_l3did_bbfeatsFalse_miFalse.pth
-# model_checkpoint: cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_step1_0_ls3did_bbfeatsFalse_miFalse.pth
-# model_checkpoint: cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_step1_0_lss3did_bbfeatsFalse_miFalse.pth
+model_checkpoint: cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_step1_0_ls3did_bbfeatsFalse_miFalse.pth
 
 train:
-  num_epoch: 50 # default: 50 for atom-level, 25/1 in original residue-level setting
+  num_epoch: 50 
 
 # extra information attached to the saved model name
-extra: step2_0_maml3did_fepoch200_bbfeatsFalse_miFalse
 # extra: step2_0_l3did_fepoch200_bbfeatsFalse_miFalse
-# extra: step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse
-# extra: step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse
+extra: step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse
 
