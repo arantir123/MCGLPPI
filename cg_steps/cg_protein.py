@@ -1044,9 +1044,9 @@ class CG22_PackedProtein(PackedMolecule, CG22_Protein):
     def num_nodes(self, value):
         self.num_atoms = value
 
-    # ** in current implementation, it will be used for edge_mask in CGDistancePrediction (graph.edge_mask(~functional.as_mask(indices, graph.num_edge))) **
-    # ** in this case, the angular node features have not been generated (should be after this 'data_mask' function), thus angular feature alignment is not considered here **
-    # ** besides, it will also be used in 'node_mask' function below **
+    # * in current implementation, it will be used for edge_mask in CGDistancePrediction (graph.edge_mask(~functional.as_mask(indices, graph.num_edge))) *
+    # * in this case, the angular node features have not been generated (should be after this 'data_mask' function), thus angular feature alignment is not considered here *
+    # * besides, it will also be used in 'node_mask' function below *
     # data_dict, meta_dict = self.data_mask(edge_index=index), index contains edge indices to be retained
     def data_mask(self, node_index=None, edge_index=None, residue_index=None, graph_index=None, include=None, exclude=None):
         # for handling standard registered features (not including unregistered features like angular information)
@@ -1073,7 +1073,7 @@ class CG22_PackedProtein(PackedMolecule, CG22_Protein):
 
         return data_dict, meta_dict
 
-    # ** in current implementation, it will be used for graph truncation in forward sequence diffusion process (graph1 = graph1.subgraph(node_mask)) **
+    # * in current implementation, it will be used for graph truncation in forward sequence diffusion process (graph1 = graph1.subgraph(node_mask)) *
     # input: boolean mask for unmasked/remained CG nodes in current batch (True for remained bead nodes)
     # in current logic, we assume seq_bb_retain is set to True by default, under which we need to remove all angle information related to masked side chain beads
     def node_mask(self, index, compact=True):
@@ -1149,9 +1149,9 @@ class CG22_PackedProtein(PackedMolecule, CG22_Protein):
         else:
             return angles.clone()
 
-    # ** in current implementation, it will be used in CGDistancePrediction (graph.edge_mask(~functional.as_mask(indices, graph.num_edge))) **
-    # ** in this case, the angular node features have not been generated (should be after this 'edge_mask' function), thus angular feature alignment is not considered here **
-    # ** however, we still need to pass the (unregistered) node composition for each angle to the new generated protein for the later angular node feature calculation **
+    # * in current implementation, it will be used in CGDistancePrediction (graph.edge_mask(~functional.as_mask(indices, graph.num_edge))) *
+    # * in this case, the angular node features have not been generated (should be after this 'edge_mask' function), thus angular feature alignment is not considered here *
+    # * however, we still need to pass the (unregistered) node composition for each angle to the new generated protein for the later angular node feature calculation *
     # edge_mask input: a mask with the size of num_edge, using True to indicate the remained edges
     def edge_mask(self, index):
         index = self._standarize_index(index, self.num_edge) # tensor([0, 1, 2,  ..., 5195, 5196, 5197])
@@ -1174,6 +1174,8 @@ class CG22_PackedProtein(PackedMolecule, CG22_Protein):
                           sidechain_angles=self.sidechain_angles, backbone_dihedrals=self.backbone_dihedrals,
                           meta_dict=meta_dict, **data_dict)
 
+    # ** the following functions are cloned from the code of the original scale: https://github.com/DeepGraphLearning/torchdrug/ **
+    # ** which will be further updated if the corresponding CG functions are required **
     def residue_mask(self, index, compact=False):
         """
         Return a masked packed protein based on the specified residues.
