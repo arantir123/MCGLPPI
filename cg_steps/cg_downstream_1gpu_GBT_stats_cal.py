@@ -65,7 +65,6 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
                   '%.3f' % np.mean(val_node_num), '%.3f' % np.mean(val_edge_num), '%.3f' % np.mean(val_degree_in), '%.3f' % np.mean(val_degree_out))
             print("average node num, edge num, degree in, and degree out for proteins in the test set:",
                   '%.3f' % np.mean(test_node_num), '%.3f' % np.mean(test_edge_num), '%.3f' % np.mean(test_degree_in), '%.3f' % np.mean(test_degree_out))
-            exit()
 
         if cfg.model_save_mode == 'val':
             # ** the metrics should be those larger represent better performance (e.g., auroc/pearsonr) **
