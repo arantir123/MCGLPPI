@@ -66,9 +66,12 @@ __Step3. Downstream complex overall property predictions based on w/ or w/o pre-
 __(1) dG predictions based on the PDBbind strict dimer dataset__
 
 1. This dataset only contains the strict dimer complexes curated from the PDBbind v2020 database (http://www.pdbbind.org.cn/download/pdbbind_2020_intro.pdf). We provide relevant files as follows:
+   
+   1）https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing (original data for full-atom and MARTINI2)
 
-   1) 
+   2) https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing (original data for MARTINI3)
 
+   
 ## Quick start ##
 
 __We have provided:__ 
