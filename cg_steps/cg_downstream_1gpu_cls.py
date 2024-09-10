@@ -62,7 +62,7 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
                 best_epoch, best_val = epoch, metric[cfg.eval_metric]
                 # independent test
                 with torch.no_grad():
-                    # 'task' is the task wrapper (e.g., PDBBIND) defined outside the 'train' function, which will be updated in every 'loop' function
+                    # 'task' is the task wrapper defined outside the 'train' function, which will be updated in every 'loop' function
                     best_test_metric = test(test_set, task, max_time=cfg.get("test_time"), device=device)
                 # current test results
                 print("\nEPOCH %d" % epoch, "TEST metric under current best_val:", best_test_metric)
@@ -208,7 +208,6 @@ if __name__ == "__main__":
         logger.warning("Config file: %s" % args.config)
         logger.warning(pprint.pformat(cfg))
 
-    # need to register the name of below datasets in torchdrug.data.__init__.py so that these datasets can be searched by load_config_dict
     if cfg.dataset["class"] in ["PDBBINDDataset", "MANYDCDataset", "ATLASDataset"]:
         _dataset = core.Configurable.load_config_dict(cfg.dataset)
         train_set, valid_set, test_set = _dataset.split()
