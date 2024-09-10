@@ -250,7 +250,7 @@ def GBT_test(dataset, model, max_time=None, device=None):
     return pred, target
 
 
-# ** compared with cg_downstream_1gpu.py, an extra loop is created for each fold, in which the json file for current loop will be temporarily saved for data splitting **
+# * in current script, an extra loop is created for each fold, in which the json file for current loop will be temporarily saved for data splitting *
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
@@ -322,7 +322,7 @@ if __name__ == "__main__":
         # remove current temporary split file
         os.remove(temp_split_path)
 
-        # ** the pre-trained parameters are loaded here for NN and GBT-based decoder **
+        # ** the pre-trained parameters are loaded here for MLP and GBT-based decoder **
         task, optimizer, scheduler = cg_util.build_ppi_solver(cfg, train_set, valid_set, test_set)
 
         # make the task wrapper enter the cuda
@@ -349,7 +349,7 @@ if __name__ == "__main__":
             print(f'total elapsed time of current fold {fold}: {t2 - t1:.4f}')
             print(f'total elapsed time of the downstream training process: {t2 - t0:.4f}')
 
-        # use NN as the decoder
+        # use MLP as the decoder
         else:
             # in current setting, there is only one model saved for 10-fold CV (i.e., the model of the last fold)
             # in current setting, for downstream tasks, training from scratch and based on pre-training share the same running epochs
