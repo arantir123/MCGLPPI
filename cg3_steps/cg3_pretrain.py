@@ -9,8 +9,6 @@ import pprint
 from torchdrug.utils import comm
 from torchdrug import core, models, tasks, datasets, utils
 
-# import these here to make load_config_dict identify these registered functions when calling the main function
-# 'transform' provides 'NoiseTransform' function for diffusion pre-training
 from siamdiff import dataset, model, task, transform
 
 # new added import for performing CG-scale pre-training
