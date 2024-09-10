@@ -6,7 +6,6 @@ from torch.optim import lr_scheduler
 from torchdrug.utils import comm
 from torchdrug import core, utils, datasets, models, tasks
 
-
 logger = logging.getLogger(__file__)
 
 
