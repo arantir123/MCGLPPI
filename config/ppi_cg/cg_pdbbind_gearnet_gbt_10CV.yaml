@@ -5,8 +5,8 @@ dataset:
   class: PDBBINDDataset
 
   # the path for storing the downstream source data
-  # data_path: MCGLPPI/downstream_files/PDBBIND/pdbbind_dimer_strict/ # 1270-set
-  data_path: MCGLPPI/downstream_files/PDBBIND/pdbbind_dimer_strict_subset/ # 915-subset
+  # data_path: MCGLPPI/downstream_files/PDBBIND/m2_pdbbind_dimer_strict/ # 1270-set
+  data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict_subset/ # 915-subset
 
   # the path for storing the output processed (model input) pickle file
   output_path: MCGLPPI/downstream_files/PDBBIND/
