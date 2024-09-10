@@ -213,7 +213,7 @@ class HyboMessagePassing(nn.Module):
     def __init__(self, input_dim, num_relation):
         super(HyboMessagePassing, self).__init__()
         # print(input_dim, output_dim, num_relation, edge_input_dim, batch_norm, activation)
-        # 512 512 7 None True relu
+        # 512, 512, 7, None, True, relu
         self.num_relation = num_relation
         self.input_dim = input_dim
 
@@ -317,7 +317,7 @@ class GeometricRelationalGraphConv(nn.Module):
 
 # Note: this version uses torch_ext.sparse_coo_tensor_unsafe(indices, values, size) contained in original torchdrug repository to create adjacent matrix,
 # which uses a PyTorch C++ extension just-in-time (JIT) to boost the calculation, requiring proper JIT configuration to run
-@R.register("models.CG22_GearNet") # should be registered in torchdrug.models.__init__
+@R.register("models.CG22_GearNet") # can be registered in torchdrug.models.__init__
 class CG22_GeometryAwareRelationalGraphNeuralNetwork(nn.Module, core.Configurable):
     """
     Parameters:
