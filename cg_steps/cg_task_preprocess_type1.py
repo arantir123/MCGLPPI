@@ -85,7 +85,8 @@ class CGDiff(tasks.Task, core.Configurable):
         # crop the graph based on residue numbers
         num_nodes = graph.num_residues
         num_cum_nodes = num_nodes.cumsum(0)
-        # print(num_nodes, num_cum_nodes) # tensor([100, 100, 74, 100, 100, 98, 100, 51], device='cuda:0') tensor([100, 200, 274, 374, 474, 572, 672, 723], device='cuda:0')
+        # print(num_nodes, num_cum_nodes) 
+        # tensor([100, 100, 74, 100, 100, 98, 100, 51], device='cuda:0') tensor([100, 200, 274, 374, 474, 572, 672, 723], device='cuda:0')
 
         # decide the mask rate according to the noise level
         # max_ratio: 1, min_ratio: 0.15, the mask rate increase with the increase of the noise level
