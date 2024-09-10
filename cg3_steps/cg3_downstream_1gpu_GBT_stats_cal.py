@@ -227,7 +227,7 @@ def MLP_test(dataset, model, max_time=None, whether_stats=False, device=None):
            np.array(total_node_num), np.array(total_edge_num), np.array(total_degree_in), np.array(total_degree_out)
 
 
-# ** this script does not support the 10-fold cross validation **
+# * this script does not support the 10-fold cross validation *
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
