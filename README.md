@@ -63,7 +63,11 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
    
 __Step3. Downstream complex overall property predictions based on w/ or w/o pre-trained CG graph encoder.__
 
-__dG predictions based on the PDBbind strict dimer dataset__
+__(1) dG predictions based on the PDBbind strict dimer dataset__
+
+1. This dataset only contains the strict dimer complexes curated from the PDBbind v2020 database (http://www.pdbbind.org.cn/download/pdbbind_2020_intro.pdf). We provide relevant files as follows:
+
+   1) 
 
 ## Quick start ##
 
