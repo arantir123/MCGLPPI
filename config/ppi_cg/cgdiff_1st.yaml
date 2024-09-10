@@ -13,10 +13,8 @@ dataset:
   output_path: /3did/
   
   # the name of the output pickle file (for creation and re-read)
-  # pickle_name: _3did_large.pkl.gz
-  pickle_name: _3did_maml_subset.pkl.gz
-  # pickle_name: _3did_large_strict.pkl.gz
-  # pickle_name: _3did_large_strict_subset.pkl.gz
+  # pickle_name: m2_3did_large.pkl.gz
+  pickle_name: m2_3did_large_strict.pkl.gz
 
   transform:
     class: Compose
@@ -40,6 +38,7 @@ dataset:
 task:
   class: CGDiff
   num_mlp_layer: 3
+  
   sigma_begin: 1.0e-3 # determining alpha and beta values in diffusion process (magnitude)
   sigma_end: 0.1 # determining alpha and beta values in diffusion process (magnitude)
   num_noise_level: 100 # determining alpha and beta values in diffusion process (steps)
@@ -52,8 +51,6 @@ task:
   angle_enhance: True # whether to use the angle information provided in itp file as auxiliary bead node features
 
   model: # the scale and edge type used here is for atom-based learning (rather than the residue-based model used in FOLD3D)
-    # class: GearNet
-    # class: CG22_GearNet
     class: CG22_GearNetIEConv
     input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
     # input_dim: 17 # bead type number
