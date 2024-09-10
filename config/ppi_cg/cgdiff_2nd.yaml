@@ -1,31 +1,27 @@
-# small noise level stage (fewer number of noise levels will be considered during the diffusion process)
+output_dir: pretrained_cgmodels
+# small noise level stage (fewer number of noise levels will be considered during this diffusion process)
 # while the noise magnitude of each noise level is also determined by sigma_begin and sigma_end
-# under current setting, as sigma_begin and sigma_end are the same (1.0e-4), leading to the beta value for each noise level (5 in total) is the same (in stage1, it varies in different levels)
+# under current setting, as sigma_begin and sigma_end are the same (1.0e-4), leading to the beta value for each noise level (5 in total) is the same (in stage 1, it varies in different levels)
 # thus, the cumprod alpha is very large, representing there is few noise added during the second stage
 # print(noise_level, self.alphas, self.alphas.shape[0])
 # in stage1: tensor([41, 97, 91, 72]), tensor([0.9988, 0.9975, ..., 0.0063, 0.0057, 0.0051]), 100
 # in stage2 (batch_size=4): tensor([1, 2, 1, 2]), tensor([0.9999, 0.9998, 0.9997, 0.9996, 0.9995]), 5
 # 实际上，对于预训练的两个阶段，对于第二个阶段的序列噪声添加，其实使用的噪声强度/方式和第一阶段是一样的，只是第二阶段由于噪声间隔设置的较少，所以序列mask只有相对较少的几种选择（但强度范围和阶段一应该是基本一致的）
 # 对于结构噪声添加，是主要基于两个阶段计算出的cumprod alpha值，由于第二阶段该值很小（如上），所以第二阶段对蛋白质构象添加的噪声影响很小，符合原论文描述（但序列噪声的强度范围仍和第一阶段保持一致，只是可选范围变少）
-output_dir: pretrained_cgmodels
 
 dataset:
   class: _3did
     
   # path for storing original data files
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large/
-  path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_maml_subset/
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict/
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict_subset/
+  # path: /3did/3did_data_large/
+  path: /3did/3did_data_large_strict/
 
   # path for storing the processed output storage pickle file
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/
+  output_path: /3did/
   
   # the name of the output pickle file (for creation and re-read)
-  # pickle_name: _3did_large.pkl.gz
-  pickle_name: _3did_maml_subset.pkl.gz
-  # pickle_name: _3did_large_strict.pkl.gz
-  # pickle_name: _3did_large_strict_subset.pkl.gz
+  # pickle_name: m2_3did_large.pkl.gz
+  pickle_name: m2_3did_large_strict.pkl.gz
 
   transform: # these hyperparameters will not change during phases 1 and 2
     class: Compose
@@ -49,6 +45,7 @@ dataset:
 task: # smaller values compared with the pretraining phase 1
   class: CGDiff
   num_mlp_layer: 3
+  
   sigma_begin: 1.0e-4 # 1: 1.0e-3
   sigma_end: 1.0e-4 # 1: 0.1
   num_noise_level: 5 # 1: 5, less num_noise_level from -6~6
