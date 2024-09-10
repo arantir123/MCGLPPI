@@ -307,10 +307,10 @@ if __name__ == "__main__":
     train_loader, valid_loader, test_loader = [ # shuffle=(cfg.dataset["class"] != "PIPDataset")
         data.DataLoader(dataset, cfg.engine.batch_size, shuffle=True, num_workers=cfg.engine.num_worker)
             for dataset in [train_set, valid_set, test_set]]
-    # *** please note that for below two types of decoders, GBT only uses train_loader and test_loader, while the MLP needs the all three loaders ***
-    # *** since for MLP, the validation set is explicitly needed for model selection of every epoch, while GBT does not needed ***
-    # *** thus, under current settings, for MLP, the validation set should be explicitly specified when creating data splitting json file ***
-    # *** while for GBT, the validation set can be put into training set when creating jsons, and can be split within the GBT (by specifying the split portion) ***
+    # * please note that for below two types of decoders, GBT only uses train_loader and test_loader, while the MLP needs the all three loaders *
+    # * since for MLP, the validation set is explicitly needed for model selection of every epoch, while GBT does not needed *
+    # * thus, under current settings, for MLP, the validation set should be explicitly specified when creating data splitting json file *
+    # * while for GBT, the validation set can be put into training set when creating jsons, and can be split within the GBT (by specifying the split portion) *
 
     t0 = time.time()
     if gbt_pars != None:
