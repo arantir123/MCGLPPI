@@ -77,7 +77,7 @@ def train(cfg, model, optimizer, scheduler, train_set, valid_set, test_set, devi
                 best_epoch, best_val = epoch, metric[cfg.eval_metric]
                 # independent test
                 with torch.no_grad():
-                    # 'task' is the task wrapper (e.g., PDBBIND) defined outside the 'train' function, which will be updated in every 'loop' function
+                    # 'task' is the task wrapper defined outside the 'train' function, which will be updated in every 'loop' function
                     best_test_metric, _, _, _, _ = MLP_test(test_set, task, max_time=cfg.get("test_time"), device=device)
                 # current test results
                 print("\nEPOCH %d" % epoch, "TEST metric under current best_val:", best_test_metric)
@@ -284,12 +284,11 @@ def GBT_test(dataset, model, max_time=None, device=None):
     return pred, target
 
 
-# * currently this script is only used for regression-based tasks including PDBBIND and ATLAS *
 if __name__ == "__main__":
     args, vars = util.parse_args()
     cfg = util.load_config(args.config, context=vars)
 
-    # os.path.basename(args.config).split('.')[0] is used to indicate the ymal configuration file name
+    # os.path.basename(args.config).split('.')[0] is used to indicate the yaml configuration file name
     dirname = os.path.basename(args.config).split('.')[0] + '_yaml' + '_seed' +str(args.seed)
     working_dir = util._create_working_directory(cfg, dirname=dirname) # dirname: providing extra suffix for working_dir
     print('current working dictionary:', working_dir)
@@ -324,8 +323,6 @@ if __name__ == "__main__":
     else:
         gbt_pars = None
 
-    # * currently this script is only used for regression tasks including PDBBIND and ATLAS
-    # need to register the name of below datasets in torchdrug.data.__init__.py so that these datasets can be searched by load_config_dict
     if cfg.dataset["class"] in ["PDBBINDDataset", "MANYDCDataset", "ATLASDataset"]:
         _dataset = core.Configurable.load_config_dict(cfg.dataset)
         train_set, valid_set, test_set = _dataset.split()
@@ -344,10 +341,10 @@ if __name__ == "__main__":
     train_loader, valid_loader, test_loader = [ # shuffle=(cfg.dataset["class"] != "PIPDataset")
         data.DataLoader(dataset, cfg.engine.batch_size, shuffle=True, num_workers=cfg.engine.num_worker)
             for dataset in [train_set, valid_set, test_set]]
-    # *** please note that for below two types of decoders, GBT only uses train_loader and test_loader, while the MLP needs the all three loaders ***
-    # *** since for MLP, the validation set is explicitly needed for model selection of every epoch, while GBT does not needed ***
-    # *** thus, under current settings, for MLP, the validation set should be explicitly specified when creating data splitting json file ***
-    # *** while for GBT, the validation set can be put into training set when creating jsons, and can be split within the GBT (by specifying the split portion) ***
+    # * please note that for below two types of decoders, GBT only uses train_loader and test_loader, while the MLP needs the all three loaders *
+    # * since for MLP, the validation set is explicitly needed for model selection of every epoch, while GBT does not needed *
+    # * thus, under current settings, for MLP, the validation set should be explicitly specified when creating data splitting json file *
+    # * while for GBT, the validation set can be put into training set when creating jsons, and can be split within the GBT (by specifying the split portion) *
 
     t0 = time.time()
     if gbt_pars != None:
