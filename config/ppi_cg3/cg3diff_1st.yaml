@@ -1,0 +1,117 @@
+# * large noise level stage (larger number of noise levels will be considered during this diffusion process) *
+# * while the noise magnitude of each noise level is also determined by sigma_begin and sigma_end *
+# output_dir: D:/PROJECT B2_5/data/raw_data/scratch/cgdiff_outputs # model output path
+output_dir: pretrained_cgmodels
+
+dataset:
+  class: _3did
+
+  # path for storing original data files
+  # path: C:/Users/Yang Yue/Desktop/simulation_dataset/MARTINI3/ # toy path
+  # path: F:/UOB/External Dataset/3did/3did_data_large_strict/ # portable drive
+  path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict/
+  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict_subset/
+
+  # path for storing the processed output storage pickle file
+  # output_path: C:/Users/Yang Yue/Desktop/simulation_dataset/ # toy output path
+  # output_path: F:/UOB/External Dataset/3did/ # portable drive
+  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/
+
+  # the name of the output pickle file (for creation and re-read)
+  # pickle_name: cg3_3did_toy.pkl.gz
+  pickle_name: m3_3did_large_strict.pkl.gz
+  # pickle_name: m3_3did_large_strict_subset.pkl.gz
+
+  transform:
+    class: Compose
+    # Compose a list of transforms into one, take a series of transforms to process Protein class sequentially during batch Dataloader
+    # relevant original data is provided in ./transforms/transform
+    transforms:
+      # - class: ProteinView # for changing the protein attribute 'view' for activating certain view-related functions (view: atom/residue)
+        # view: residue
+      - class: TruncateProtein # truncate proteins based on AA sequence
+        max_length: 150 # 150 for residue-level
+        random: True
+      - class: NoiseTransform # the function to create conformers for the siamese diffusion scheme
+        # noise_type: torsion # because in CG scale, it is not realistic to create conformers by rotating torsion angles, it is more suitable to implement by adding coordinate noise
+        noise_type: gaussian
+        # sigma: 0.1 # sigma = 0.1 and noise_type = 'torsion' are for atom-level model
+        sigma: 0.3
+      # - class: AtomFeature # for generating features for atom-level models (one-hot atomic type + one-hot residue type for each atom node)
+        # atom_feature: residue_symbol
+        # keys: ["graph", "graph2"]
+
+task:
+  class: CGDiff
+  num_mlp_layer: 3
+
+  sigma_begin: 1.0e-3 # default: 1.0e-3, determining alpha and beta values in diffusion process (magnitude)
+  sigma_end: 0.1 # default: 0.1, determining alpha and beta values in diffusion process (magnitude)
+  num_noise_level: 100 # default: 100, determining alpha and beta values in diffusion process (steps)
+  gamma: 0.5 # default: 0.5, control the weight between structural loss and sequential loss (from 0 to 1, 0: only use sequence diffusion, 1: only use structure diffusion, default: 0.5)
+  use_MI: False # default: False
+
+  # extra hyperparameter:
+  seq_bb_retain: True # whether also to retain all backbone beads in forward sequence diffusion (rather than only retaining all beads in unmasked residues)
+  bb4aa_feats_mask: False # when seq_bb_retain = True, considering whether BB type features of remained BB nodes of masked AAs will be closed (True: to mask)
+  angle_enhance: True # whether to use the angle information provided in itp file as auxiliary bead node features
+
+  model:
+    class: CG22_GearNetIEConv
+    input_dim: 31 # bead type number (23) + 4*2 angle features (angle_enhance=True)
+    # input_dim: 23 # bead type number
+    hidden_dims: [256, 256, 256, 256, 256, 256]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: sum
+    # num_relation: 1 # original relation number (only containing radius edges)
+    num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+
+    edge_input_dim: 65 # cg3_gearnet: 58 + num_relation
+    # edge_input_dim: 59 # gearnet: 52 + num_relation
+    num_angle_bin: 8
+    # extra hyperparameter for GearNetIEConv-based models:
+    embedding_dim: 256 # extra linear embedding layer
+    # layer_norm: True
+    # dropout: 0.2
+    # use_ieconv: True
+
+  graph_construction_model:
+    class: CG3_GraphConstruction
+    edge_layers:
+      # - class: SpatialEdge
+        # radius: 4.5
+        # min_distance: 0
+      - class: AdvSpatialEdge
+        radius: 5 # empirically, MARTINI-based edge cutoff can also be tried starting from 4A~5A
+        min_distance: 0
+        across_res_mask: True # distinguish whether bead nodes are across two residues or not
+        cg_edge_enhance: True # enhance the radius edge with CG defined edges
+        cg_edge_reduction: False # whether to remove the duplicate CG edges on the top of the radius edges
+    edge_feature: cg3_gearnet # input attribute of initialization function of CG3_GraphConstruction
+    # edge_feature: gearnet
+
+optimizer:
+  class: Adam
+  lr: 1.0e-4
+
+engine: # the setting of gpus and batch_size can be further tuned based on current datasets
+  gpus: [0] 
+  # as the protein sequence will be truncated into around 100/150 AAs during pre-training,
+  # the computation cost is affordable even under relatively large batch_size
+  batch_size: 64 # default: 64
+  log_interval: 100 # default: 100
+
+save_interval: 5 # save model every 'save_interval' epoch
+save_model: False # False: save both the encoder and prediction head
+
+train:
+  num_epoch: 200 # default: 200
+
+# extra information attached to the saved model name
+# extra: cg3_step1_0_ls3did_bbfeatsFalse_miFalse
+extra: cg3_step1_1_ls3did_bbfeatsFalse_miFalse
+# extra: cg3_step1_0_lss3did_bbfeatsFalse_miFalse
+# extra: cg3_step1_1_lss3did_bbfeatsFalse_miFalse
+# extra: step1_toy
