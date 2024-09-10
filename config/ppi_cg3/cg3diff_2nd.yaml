@@ -115,8 +115,5 @@ train:
   num_epoch: 50 # default: 50
 
 # extra information attached to the saved model name
-# extra: cg3_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse
-extra: cg3_step2_1.1_ls3did_fepoch200_bbfeatsFalse_miFalse
-# extra: cg3_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse
-# extra: cg3_step2_1_lss3did_fepoch200_bbfeatsFalse_miFalse
-# extra: step2_toy
+extra: cg3_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse
+
