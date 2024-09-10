@@ -246,9 +246,9 @@ class CG22_Protein(Molecule):
                 cg_lines = f.readlines()
 
         # 1. identifying over-large proteins 2. only explicitly retaining 'ATOM' and 'TER' entries
-        # ** in real pre-training cg dataset, there are some proteins which contain the non-consecutive chain (i.e., part of this chain is missing) **
-        # ** in this case, for cg pdb file, a 'TER' row will be added into atom rows of this chain to indicate the missiong position **
-        # ** thus, in cg pdb file, the residue id in such chains is not consecutive (with extra 'TER' row), while in itp files, these residue ids will be re-numbered consecutively **
+        # * in real pre-training cg dataset, there are some proteins which contain the non-consecutive chain (i.e., part of this chain is missing) *
+        # * in this case, for cg pdb file, a 'TER' row will be added into atom rows of this chain to indicate the missiong position *
+        # * thus, in cg pdb file, the residue id in such chains is not consecutive (with extra 'TER' row), while in itp files, these residue ids will be re-numbered consecutively *
         complete_check, cg_pdb_info = cleaning_cg_pdb(cg_lines, pdb, AA_num_threshold=AA_num_threshold)
         if not complete_check: # not passing the check
             return complete_check, cg_pdb_info # over-large protein info
@@ -728,8 +728,8 @@ def cleaning_cg_pdb(cglines, pdb, AA_num_threshold=3000):
 
 
 def cleaning_cg_itp(chain_lines, pdb):
-    # ** in some cases, sheet_bonds_3 and sheet_bonds_4 will not exist in itp along with the tag row, **
-    # ** for backbone dihedrals, sometimes the rows will not exist but the tag is remained, which needs to be considered **
+    # * in some cases, sheet_bonds_3 and sheet_bonds_4 will not exist in itp along with the tag row, *
+    # * for backbone dihedrals, sometimes the rows will not exist but the tag is remained, which needs to be considered *
 
     complete_check = True
     chain_dict = dict()
@@ -1124,11 +1124,11 @@ class CG22_PackedProtein(PackedMolecule, CG22_Protein):
         # (2) print(edge_list.size, edge_index.size(), edge_list[edge_index].size(), self.num_residues, offsets.size())
         # torch.Size([1532, 3]), torch.Size([1532]), torch.Size([1072, 3]), tensor([100, 62, 100, 60]), torch.Size([1532])
 
-        # * we can find that the returned num_residues is same to that before subgraph cropping, the reason should be that *
-        # * actually in original sequence truncation logic, the nodes to be masked are only side chain nodes of masked residues *
-        # * while the backbone (nodes) of these masked residues are retained, thus the num_residues should not be changed *
-        # * in current CG implementation, the backbone beads may also be masked, however, assuming after here *
-        # * num_residues will not be used until the next epoch, in this case, we will not change the num_residues either *
+        # we can find that the returned num_residues is same to that before subgraph cropping, the reason should be that
+        # actually in original sequence truncation logic, the nodes to be masked are only side chain nodes of masked residues
+        # while the backbone (nodes) of these masked residues are retained, thus the num_residues should not be changed
+        # in current CG implementation, the backbone beads may also be masked, however, assuming after here
+        # num_residues will not be used until the next epoch, in this case, we will not change the num_residues either
 
         # (3) data_dict['atom_type'].size, data_dict['node_position'].size, data_dict['bead2residue'].size, data_dict['residue_type'].size
         # [503, 3], [503, 1, 3], [503], [322] (being processed individually based on its 'residue reference' tag), [503, 17]
