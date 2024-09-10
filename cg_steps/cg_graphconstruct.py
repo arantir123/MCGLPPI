@@ -7,7 +7,6 @@ from torchdrug.core import Registry as R
 from cg_steps.cg_protein import CG22_PackedProtein
 
 
-# ** should be registered in torchdrug.layers.geometry.__init__, for to be searched by the register function **
 @R.register("layers.CG22_GraphConstruction")
 class CG22_GraphConstruction(nn.Module, core.Configurable):
     """
