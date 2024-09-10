@@ -50,7 +50,7 @@ task:
   bb4aa_feats_mask: False # when seq_bb_retain = True, considering whether BB type features of remained BB nodes of masked AAs will be closed
   angle_enhance: True # whether to use the angle information provided in itp file as auxiliary bead node features
 
-  model: # the scale and edge type used here is for atom-based learning (rather than the residue-based model used in FOLD3D)
+  model:
     class: CG22_GearNetIEConv
     input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
     # input_dim: 17 # bead type number
@@ -71,7 +71,6 @@ task:
     # dropout: 0.2
     # use_ieconv: True
 
-  # only spatial edge used here (atom scale)
   graph_construction_model:
     class: CG22_GraphConstruction
     edge_layers:
@@ -79,7 +78,7 @@ task:
         # radius: 4.5
         # min_distance: 0
       - class: AdvSpatialEdge
-        radius: 5 # default: 4.5, empirically, martini2.2 based edge cutoff can also be tried starting from 4A~5A
+        radius: 5 # default: 5, empirically, martini2.2 based edge cutoff can also be tried starting from 4A~5A
         min_distance: 0
         across_res_mask: True # distinguish whether bead nodes are across two residues or not
         cg_edge_enhance: True # enhance the radius edge with CG defined edges
@@ -91,10 +90,9 @@ optimizer:
   class: Adam
   lr: 1.0e-4
 
-engine: # the setting of gpus and batch_size can be further tuned based on current datasets
-  # gpus: [0, 1, 2, 3]
+engine: 
   gpus: [0]
-  # as the protein sequence will be truncated into around 100 AAs during pretraining, 
+  # as the protein sequence will be truncated into around 150 AAs during pretraining, 
   # the computation cost is affordable even under relatively large batch_size
   batch_size: 64
   log_interval: 100
@@ -103,10 +101,7 @@ save_interval: 5 # save model every 'save_interval' epoch
 save_model: False # False: save both the encoder and prediction head
 
 train:
-  num_epoch: 200 # default: 25 for both atom-level and residue-level
+  num_epoch: 200 
 
 # extra information attached to the saved model name
-extra: step1_0_maml3did_bbfeatsFalse_miFalse
-# extra: step1_0_ls3did_bbfeatsFalse_miFalse
-# extra: step1_0_lss3did_bbfeatsFalse_miFalse
-# extra: test_0
+extra: step1_0_ls3did_bbfeatsFalse_miFalse
