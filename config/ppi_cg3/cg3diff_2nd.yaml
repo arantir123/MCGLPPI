@@ -14,20 +14,13 @@ dataset:
   class: _3did
 
   # path for storing original data files
-  # path: C:/Users/Yang Yue/Desktop/simulation_dataset/MARTINI3/ # toy path
-  # path: F:/UOB/External Dataset/3did/3did_data_large_strict/ # portable drive
-  path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict/
-  # path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/3did_data_large_strict_subset/
+  path: /3did/3did_data_large_strict/
 
   # path for storing the processed output storage pickle file
-  # output_path: C:/Users/Yang Yue/Desktop/simulation_dataset/ # toy output path
-  # output_path: F:/UOB/External Dataset/3did/ # portable drive
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/3did/
+  output_path: /3did/
 
   # the name of the output pickle file (for creation and re-read)
-  # pickle_name: cg3_3did_toy.pkl.gz
   pickle_name: m3_3did_large_strict.pkl.gz
-  # pickle_name: m3_3did_large_strict_subset.pkl.gz
 
  # * these hyperparameters will not change during phases 1 and 2 *
   transform:
@@ -104,7 +97,7 @@ optimizer:
   class: Adam
   lr: 1.0e-4
 
-engine: # the setting of gpus and batch_size can be further tuned based on current datasets
+engine: 
   gpus: [0]
   batch_size: 64 # default: 64
   log_interval: 100 # default: 100
@@ -117,8 +110,6 @@ save_model: True # only save the encoder
 # model_checkpoint: {{ ckpt }}
 # model_check_point: martini3_cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_cg3_step1_0_ls3did_bbfeatsFalse_miFalse.pth
 model_check_point: martini3_cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_cg3_step1_1_ls3did_bbfeatsFalse_miFalse.pth
-# model_check_point: martini3_cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_cg3_step1_0_lss3did_bbfeatsFalse_miFalse.pth
-# model_check_point: martini3_cgdiff_seed0_gamma0.5_bs64_epoch200_dim256_length150_radius5_extra_cg3_step1_1_lss3did_bbfeatsFalse_miFalse.pth
 
 train:
   num_epoch: 50 # default: 50
