@@ -1,16 +1,12 @@
-# output_dir: F:/UOB/External Dataset/PDBBIND/scratch/downstream_outputs
-output_dir: downstream_cgmodels/cg_PDBBIND/
+# specify your model output location
+output_dir: MCGLPPI/downstream_files/PDBBIND/scratch/downstream_outputs
 
 dataset:
   class: PDBBINDDataset
 
   # the path for storing the downstream source data
-  # data_path: C:/Users/Yang Yue/Desktop/simulation_dataset/MARTINI3/ # toy source path
-  # data_path: F:/UOB/External Dataset/PDBbind_source/pdbbind_dimer_strict/ # strict dimer path
-  # data_path: F:/UOB/External Dataset/PDBbind_source/pdbbind_dimer_strict_subset/ # strict dimer subset path
-  # data_path: F:/UOB/External Dataset/PDBbind_source/m3_pdbbind_dimer_strict/ # m3 strict dimer path
-  # data_path: F:/UOB/External Dataset/PDBbind_source/m3_pdbbind_dimer_strict_subset/ # m3 strict dimer subset path
-  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/pdbbind/
+  # data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict/ # 1270-set
+  data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict_subset/ # 915-subset
 
   # the path for storing the output processed pickle file
   # output_path: C:/Users/Yang Yue/Desktop/simulation_dataset/ # toy output path
