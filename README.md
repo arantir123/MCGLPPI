@@ -81,9 +81,9 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    Example 1 (in a standard tenfold cross-validation (CV) setting):
 
-   /config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml (MARTINI2)
+   /config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml (MARTINI2)
 
-   /config/ppi_cg3/cg3_pdbbind_gearnet_gbt.yaml (MARTINI3)
+   /config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml (MARTINI3)
 
 
 
