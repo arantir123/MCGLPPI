@@ -69,9 +69,13 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
    
    1) https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing (original data for full-atom and MARTINI2)
 
-   2）https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing (original data for MARTINI3)
+   2) https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing (original data for MARTINI3)
 
-   3）PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ (all dG predictions for corresponding complex structures)
+   3) PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ (all dG predictions for corresponding complex structures)
+
+2. We also provide the corresponding pickle files for a quick start:
+
+   https://drive.google.com/file/d/14-0QF0b8JeXUU57yMzTdTPzvsNP_ayUv/view?usp=sharing (MARTINI2 and MARTINI3)
 
    
 ## Quick start ##
