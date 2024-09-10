@@ -8,28 +8,20 @@ dataset:
   # data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict/ # 1270-set
   data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict_subset/ # 915-subset
 
-  # the path for storing the output processed pickle file
-  # output_path: C:/Users/Yang Yue/Desktop/simulation_dataset/ # toy output path
-  # output_path: F:/UOB/External Dataset/PDBbind_source/ # local output path
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/pdbbind/
+  # the path for storing the output processed (model input) pickle file
+  output_path: MCGLPPI/downstream_files/PDBBIND/
 
   # the path for storing the index of dataset splitting
-  # index_path: C:/Users/Yang Yue/Desktop/simulation_dataset/cg3_pdbbind_toy_split.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_10CV_index_seed512.jsonl 
-  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_af2subset_10CV_index_standard_seed512.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_af2subset_tmscore0.45_tmscore0.55.jsonl
-  index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed512.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_tmscore0.45_tmscore0.55.jsonl
+  # index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_10CV_index_seed512.jsonl # 1270-set
+  index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl # 915-subset
 
   # the path for storing all label information of current dataset
-  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/PDBBIND/PDBBIND.csv
-  label_path: /bask/homes/y/yxy142/cgdiff/downstream_files/PDBBIND/PDBBIND.csv
+  label_path: MCGLPPI/downstream_files/PDBBIND/PDBBIND.csv
 
   # indicating current used data source pickle file (creating it if it does not exist)
-  # pickle_name: cg3_pdbbind_toy.pkl.gz
-  # pickle_name: cg3_pdbbind_strictdimer.pkl.gz
-  pickle_name: cg3_pdbbind_strictdimer_subset.pkl.gz
-  # pickle_name: cg3_af2_pdbbind_strictdimer_subset.pkl.gz # 911-915-subset
+  # indicating current used (model input) pickle file (creating it if it does not exist)
+  # pickle_name: cg3_pdbbind_strictdimer.pkl.gz # 1270-set
+  pickle_name: cg3_pdbbind_strictdimer_subset.pkl.gz # 915-subset
 
   use_extra_label: True # determine whether to use extra dG label rather than the pkd label
   cropping_threshold: 10 # the cropping function is performed on-the-fly
