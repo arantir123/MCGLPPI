@@ -58,9 +58,9 @@ if __name__ == "__main__":
     # however, a major difference here is currently no validation and test sets are used, and thus no best_epoch is recorded
     # therefore the model storage logic could be little different, and the validation can also be added later
     t0 = time.time()
-    for i in range(0, cfg.train.num_epoch, step): # step=5, epoch=25 in total
+    for i in range(0, cfg.train.num_epoch, step): # step=5, epoch=200/50 in total
         kwargs = cfg.train.copy()
-        kwargs["num_epoch"] = min(step, cfg.train.num_epoch - i) # {'num_epoch': 25}
+        kwargs["num_epoch"] = min(step, cfg.train.num_epoch - i) # {'num_epoch': 200/50}
 
         # standard torchdrug training function (input batch data into model and get loss from the task wrapper, and then update model parameters according to the loss)
         solver.train(**kwargs)
