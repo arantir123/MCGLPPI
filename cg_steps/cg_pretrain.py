@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # exit() # for counting the sample number of currently used pre-training set
 
     step = cfg.get("save_interval", 1) # step: 5
-    # start the outer loop iterations (similar to standard downstream FOLD3D task)
+    # start the outer loop iterations (similar to the standard downstream tasks)
     # however, a major difference here is currently no validation and test sets are used, and thus no best_epoch is recorded
     # therefore the model storage logic could be little different, and the validation can also be added later
     t0 = time.time()
