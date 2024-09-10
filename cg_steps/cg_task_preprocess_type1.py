@@ -12,7 +12,6 @@ from torchdrug.models import GearNet
 @R.register("tasks.CGDiff")
 # ** in order to make load_config_dict identify this registered function, need to import CGDiff in the main function **
 class CGDiff(tasks.Task, core.Configurable):
-
     """
     Parameters:
         model (nn.Module): the protein structure encoder to be pre-trained
@@ -413,14 +412,14 @@ class CGDiff(tasks.Task, core.Configurable):
         if self.use_MI and self.graph_construction_model:
             graph2 = self.graph_construction_model.apply_edge_layer(graph2)
 
-        # *** 到目前这一步为止，节点特征为one-hot cg bead type，边特征为end node的one-hot residue type + one-hot relation type + end node间的sequential distance + end node之间的欧式距离 ***
-        # *** 其中只有end node之间的欧式距离会受下面的结构坐标噪声添加的影响，为了实时调整该特征，在add_struct_noise中已经包含根据加噪后的坐标重新调整该边特征的代码 ***
-        # *** 但要注意，若边特征继续添加end node之间的相对位置信息，该信息也需要在add_struct_noise处做进一步调整，同样地，若需要添加角度信息作为节点特征，同样也需要在坐标加噪后再对这些特征进行重新计算 ***
-        # *** 此外，在原实现中，若使用AA sequence diffusion，节点特征就不再是原子类型+残基类型one-hot，而仅包括原子类型特征，应该是为了不在节点层面泄露AA type information，在这种情况下，***
-        # *** 会试图通过微环境消息聚合recover masked的AA type，但即使这样，通过上述的gearnet边类型仍会暴露residue type信息，所以可能当前的边特征设置是不合理的，需要把边特征的end node信息从residue type切换为cg type ***
-        # *** 另外，此时边结构已经固定（即使接下来会对节点坐标加噪声），接下来结构去噪的目标就是对这些固定下来的边由于加噪导致的边距离变化进行预测，然后边特征会在add_struct_noise中完成因坐标变化引起的更新 ***
-        # *** 除了边结构和边特征外，还需要对节点特征中的角度信息进行更新（因为节点坐标发生了变化，但是所对应的角中包含的节点不应该变化），作为对比，MpbPPI预训练中腐蚀图中的边结构是基于腐蚀图生成的，但感觉由于预训练目标不同， ***
-        # *** 所以这里的边结构保留方式（因为去噪的就是哪些原始边结构的距离变化值）和MpbPPI中边结构的保留方式（是对加噪声的那些节点的位置变化值进行去噪）应该都是合理的，但对于其他的特征（非去噪目标）计算应该都是基于腐蚀图进行的 ***
+        # ** 到目前这一步为止，节点特征为one-hot cg bead type，边特征为end node的one-hot residue type + one-hot relation type + end node间的sequential distance + end node之间的欧式距离 **
+        # ** 其中只有end node之间的欧式距离会受下面的结构坐标噪声添加的影响，为了实时调整该特征，在add_struct_noise中已经包含根据加噪后的坐标重新调整该边特征的代码 **
+        # ** 但要注意，若边特征继续添加end node之间的相对位置信息，该信息也需要在add_struct_noise处做进一步调整，同样地，若需要添加角度信息作为节点特征，同样也需要在坐标加噪后再对这些特征进行重新计算 **
+        # ** 此外，在原实现中，若使用AA sequence diffusion，节点特征就不再是原子类型+残基类型one-hot，而仅包括原子类型特征，应该是为了不在节点层面泄露AA type information，在这种情况下，**
+        # ** 会试图通过微环境消息聚合recover masked的AA type，但即使这样，通过上述的gearnet边类型仍会暴露residue type信息，所以可能当前的边特征设置是不合理的，需要把边特征的end node信息从residue type切换为cg type **
+        # ** 另外，此时边结构已经固定（即使接下来会对节点坐标加噪声），接下来结构去噪的目标就是对这些固定下来的边由于加噪导致的边距离变化进行预测，然后边特征会在add_struct_noise中完成因坐标变化引起的更新 **
+        # ** 除了边结构和边特征外，还需要对节点特征中的角度信息进行更新（因为节点坐标发生了变化，但是所对应的角中包含的节点不应该变化），作为对比，MpbPPI预训练中腐蚀图中的边结构是基于腐蚀图生成的，但感觉由于预训练目标不同，**
+        # ** 所以这里的边结构保留方式（因为去噪的就是哪些原始边结构的距离变化值）和MpbPPI中边结构的保留方式（是对加噪声的那些节点的位置变化值进行去噪）应该都是合理的，但对于其他的特征（非去噪目标）计算应该都是基于腐蚀图进行的 **
 
         # 2. add structure noise
         # for each sample in different epochs, a noise level ranging from 0 to 100 (predefined) will be selected, for graph and graph2, the same noise level will be used
