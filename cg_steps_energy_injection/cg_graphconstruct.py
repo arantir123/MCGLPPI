@@ -3,6 +3,7 @@ from torch import nn
 from torchdrug import core, data
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
+
 from cg_steps_energy_injection.cg_protein import CG22_PackedProtein
 
 
