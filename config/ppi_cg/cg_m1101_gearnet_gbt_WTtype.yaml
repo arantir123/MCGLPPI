@@ -14,10 +14,9 @@ dataset:
   index_path: MCGLPPI/downstream_files/M1101/M1101_complex_data_split_256.jsonl
 
   # the path for storing all label information of current dataset
-  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_label.csv
-  label_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_label.csv
+  label_path: MCGLPPI/downstream_files/M1101/M1101_label.csv
 
-  # indicating current used data source pickle file (creating it if it does not exist)
+  # indicating current used (model input) pickle file (creating it if it does not exist)
   pickle_name: cg2_m1101.pkl.gz
 
   cropping_threshold: 10 # the cropping function is performed on-the-fly
@@ -45,17 +44,17 @@ task:
   loss_der1_ratio: 100 # work under whether_der == True
   loss_der2_ratio: 100 # work under whether_der == True
 
-  # the hyperparameters for GBT-based decoder (use it when gbt_use exists)
+  # the hyper-parameters for GBT-based decoder (use it when gbt_use exists)
   # gbt_use:
-  #   learning_rate: 0.001 # MpbPPI: 0.001, SVSBI: 0.01, default: 0.01
-  #   max_depth: 6 # MpbPPI: 6 (4/6/8), SVSBI: 7/8/9, train size < 1000: 7, default: 8
-  #   max_features: 'sqrt'
-  #   min_samples_split: 3 # MpbPPI: 3, SVSBI: 3/4/7, 1000 < train size < 5000: 4, default: 4
-  #   n_estimators: 50000 # MpbPPI: 50000, SVSBI: 10000, default: 10000
-  #   subsample: 0.7 # MpbPPI: 0.7, SVSBI: 0.3/0.5/0/7, train size > 5000: 0.3, default: 0.7
-  #   # n_iter_no_change: None # default: None
-  #   # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
-  #   validation_fraction: 0.1
+    # learning_rate: 0.01
+    # max_depth: 8
+    # max_features: 'sqrt'
+    # min_samples_split: 4
+    # n_estimators: 10000
+    # subsample: 0.7
+    # # n_iter_no_change: None # default: None
+    # # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
+    # validation_fraction: 0.1
 
   model:
     class: CG22_GearNetIEConv
@@ -92,12 +91,6 @@ task:
 optimizer:
   class: Adam
   lr: 1.0e-4
-
-  # class: SGD
-  # lr: 1.0e-3
-  # weight_decay: 5.0e-4
-  # # weight_decay: 0
-  # momentum: 0.98
 
 # scheduler:
 #   class: ReduceLROnPlateau
