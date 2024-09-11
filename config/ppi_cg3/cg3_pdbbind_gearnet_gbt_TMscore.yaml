@@ -5,21 +5,18 @@ dataset:
   class: PDBBINDDataset
 
   # the path for storing the downstream source data
-  # data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict/ # 1270-set
   data_path: MCGLPPI/downstream_files/PDBBIND/m3_pdbbind_dimer_strict_subset/ # 915-subset
 
   # the path for storing the output processed (model input) pickle file
   output_path: MCGLPPI/downstream_files/PDBBIND/
 
   # the path for storing the index of dataset splitting
-  # index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_10CV_index_seed512.jsonl # 1270-set
-  index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl # 915-subset
+  index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_tmscore0.45_tmscore0.55.jsonl # on 915-subset
 
   # the path for storing all label information of current dataset
   label_path: MCGLPPI/downstream_files/PDBBIND/PDBBIND.csv
 
   # indicating current used (model input) pickle file (creating it if it does not exist)
-  # pickle_name: cg3_pdbbind_strictdimer.pkl.gz # 1270-set
   pickle_name: cg3_pdbbind_strictdimer_subset.pkl.gz # 915-subset
 
   use_extra_label: True # determine whether to use extra dG label rather than the pkd label (True: predicting dG labels)
@@ -104,11 +101,12 @@ engine:
 # model_checkpoint: {{ ckpt }}
 # diffusion denoising pretraining (local):
 # model_checkpoint: martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 train:
   model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
-  num_epoch: 150 
-  early_stop: 40 
+  num_epoch: 30 
+  early_stop: 10 
 
   # * comment out the time limitation hyper-parameters for comparing time used for CG-based models with models based on atom and residue scales *
   # * please note that these hyper-parameters are only used during model training, the final independent test set is not influenced by these *
