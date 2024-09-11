@@ -457,15 +457,15 @@ class CGDiff(tasks.Task, core.Configurable):
                     graph2.atom_feature = self.angle_feat_generator(graph2, graph2.atom_feature)
                 with graph2.residue():
                     graph2.residue_type[node_index] = 0
-        # *** 对于当前cg版本的序列diffusion任务，其本身可能是trivial的，因为对于要mask的残基，需要保留至少一个cg节点（也就是BB）去生成residue-level的embedding来recover被mask掉的AA类型 ***
-        # *** 但对于保留的BB节点，其节点特征one-hot BB类型就包含了一些关于AA倾向的信息（也就是通过BB类型就可以缩小其所属的AA种类），在这种情况下，AA类型recovery任务会变得相对容易，可能影响预训练效果 ***
-        # *** 所以可能需要考虑去掉序列diffusion任务（比如取一个略大于1的gamma值屏蔽序列任务，例如1.1）或者考虑合理地mask掉这些BB节点的相关节点特征（将这些节点的BB类型节点特征mask掉） ***
-        # *** 也就是说，需要一个载体节点，用于对mask掉的residue去做recovery，并且需要这个载体不泄露AA类型信息 ***
+        # ** 对于当前cg版本的序列diffusion任务，其本身可能是trivial的，因为对于要mask的残基，需要保留至少一个cg节点（也就是BB）去生成residue-level的embedding来recover被mask掉的AA类型 **
+        # ** 但对于保留的BB节点，其节点特征one-hot BB类型就包含了一些关于AA倾向的信息（也就是通过BB类型就可以缩小其所属的AA种类），在这种情况下，AA类型recovery任务会变得相对容易，可能影响预训练效果 **
+        # ** 所以可能需要考虑去掉序列diffusion任务（比如取一个略大于1的gamma值屏蔽序列任务，例如1.1）或者考虑合理地mask掉这些BB节点的相关节点特征（将这些节点的BB类型节点特征mask掉）**
+        # ** 也就是说，需要一个载体节点，用于对mask掉的residue去做recovery，并且需要这个载体不泄露AA类型信息 **
 
-        # *** 原本的序列diffusion实现：
-        # *** 也就是说，应该原本的原子节点特征包含18维的原子类型，以及21维的AA类型，在预训练过程中，若使用序列diffusion，会将需要mask的残基所对应的侧链原子全部去掉 ***
-        # *** 最终仅保留不需要mask的残基中的全部原子节点以及要mask的残基的主干原子节点，并且对于所有的剩余原子节点，需要关闭其AA类型特征，以免在AA type recovery时造成影响 ***
-        # *** 上述的描述是针对原子尺度的预训练，对于残基尺度，会保留所有的残基节点（node_mask应该是完整的），只是通过下面的with graph1.residue()关闭需要mask的残基节点的特征 ***
+        # ** 原本的序列diffusion实现：**
+        # ** 也就是说，应该原本的原子节点特征包含18维的原子类型，以及21维的AA类型，在预训练过程中，若使用序列diffusion，会将需要mask的残基所对应的侧链原子全部去掉 **
+        # ** 最终仅保留不需要mask的残基中的全部原子节点以及要mask的残基的主干原子节点，并且对于所有的剩余原子节点，需要关闭其AA类型特征，以免在AA type recovery时造成影响 **
+        # ** 上述的描述是针对原子尺度的预训练，对于残基尺度，会保留所有的残基节点（node_mask应该是完整的），只是通过下面的with graph1.residue()关闭需要mask的残基节点的特征 **
 
         # ** construct edges and edge features, this is done before structural-based perturbation, the edges constructed here for graph1 and graph2 could be different **
         if self.graph_construction_model: # original: construct the spatial edge (SpatialEdge()), now: AdvSpatialEdge in cg_transform script
@@ -474,14 +474,14 @@ class CGDiff(tasks.Task, core.Configurable):
         if self.use_MI and self.graph_construction_model:
             graph2 = self.graph_construction_model.apply_edge_layer(graph2)
 
-        # *** 到目前这一步为止，节点特征为one-hot cg bead type，边特征为end node的one-hot residue type + one-hot relation type + end node间的sequential distance + end node之间的欧式距离 ***
-        # *** 其中只有end node之间的欧式距离会受下面的结构坐标噪声添加的影响，为了实时调整该特征，在add_struct_noise中已经包含根据加噪后的坐标重新调整该边特征的代码 ***
-        # *** 但要注意，若边特征继续添加end node之间的相对位置信息，该信息也需要在add_struct_noise处做进一步调整，同样地，若需要添加角度信息作为节点特征，同样也需要在坐标加噪后再对这些特征进行重新计算 ***
-        # *** 此外，在原实现中，若使用AA sequence diffusion，节点特征就不再是原子类型+残基类型one-hot，而仅包括原子类型特征，应该是为了不在节点层面泄露AA type information，在这种情况下，***
-        # *** 会试图通过微环境消息聚合recover masked的AA type，但即使这样，通过上述的gearnet边类型仍会暴露residue type信息，所以可能当前的边特征设置是不合理的，需要把边特征的end node信息从residue type切换为cg type ***
-        # *** 另外，此时边结构已经固定（即使接下来会对节点坐标加噪声），接下来结构去噪的目标就是对这些固定下来的边由于加噪导致的边距离变化进行预测，然后边特征会在add_struct_noise中完成因坐标变化引起的更新 ***
-        # *** 除了边结构和边特征外，还需要对节点特征中的角度信息进行更新（因为节点坐标发生了变化，但是所对应的角中包含的节点不应该变化），作为对比，MpbPPI预训练中腐蚀图中的边结构是基于腐蚀图生成的，但感觉由于预训练目标不同， ***
-        # *** 所以这里的边结构保留方式（因为去噪的就是哪些原始边结构的距离变化值）和MpbPPI中边结构的保留方式（是对加噪声的那些节点的位置变化值进行去噪）应该都是合理的，但对于其他的特征（非去噪目标）计算应该都是基于腐蚀图进行的 ***
+        # ** 到目前这一步为止，节点特征为one-hot cg bead type，边特征为end node的one-hot residue type + one-hot relation type + end node间的sequential distance + end node之间的欧式距离 **
+        # ** 其中只有end node之间的欧式距离会受下面的结构坐标噪声添加的影响，为了实时调整该特征，在add_struct_noise中已经包含根据加噪后的坐标重新调整该边特征的代码 **
+        # ** 但要注意，若边特征继续添加end node之间的相对位置信息，该信息也需要在add_struct_noise处做进一步调整，同样地，若需要添加角度信息作为节点特征，同样也需要在坐标加噪后再对这些特征进行重新计算 **
+        # ** 此外，在原实现中，若使用AA sequence diffusion，节点特征就不再是原子类型+残基类型one-hot，而仅包括原子类型特征，应该是为了不在节点层面泄露AA type information，在这种情况下，**
+        # ** 会试图通过微环境消息聚合recover masked的AA type，但即使这样，通过上述的gearnet边类型仍会暴露residue type信息，所以可能当前的边特征设置是不合理的，需要把边特征的end node信息从residue type切换为cg type **
+        # ** 另外，此时边结构已经固定（即使接下来会对节点坐标加噪声），接下来结构去噪的目标就是对这些固定下来的边由于加噪导致的边距离变化进行预测，然后边特征会在add_struct_noise中完成因坐标变化引起的更新 **
+        # ** 除了边结构和边特征外，还需要对节点特征中的角度信息进行更新（因为节点坐标发生了变化，但是所对应的角中包含的节点不应该变化），作为对比，MpbPPI预训练中腐蚀图中的边结构是基于腐蚀图生成的，但感觉由于预训练目标不同，**
+        # ** 所以这里的边结构保留方式（因为去噪的就是哪些原始边结构的距离变化值）和MpbPPI中边结构的保留方式（是对加噪声的那些节点的位置变化值进行去噪）应该都是合理的，但对于其他的特征（非去噪目标）计算应该都是基于腐蚀图进行的 **
 
         # 2. add structure noise
         # for each sample in different epochs, a noise level ranging from 0 to 100 (predefined) will be selected, for graph and graph2, the same noise level will be used
@@ -1021,7 +1021,7 @@ class EnergyDecoder(nn.Module):
 
 @R.register("tasks.PDBBIND")
 # ** in order to make load_config_dict identify this registered function, need to import PDBBIND in the main function **
-# ** the decoder creation function preprocess can also be moved into initialization function **
+# ** the decoder creation function preprocess can also be moved into the initialization function **
 class PDBBIND(tasks.PropertyPrediction):
     def __init__(self, model, num_mlp_layer=1, graph_construction_model=None, normalization=True, mlp_batch_norm=False, mlp_dropout=0,
                  angle_enhance=True, energy_inject=False, vdw_radius_coef=0.2, energy_shortcut=True, whether_ES=False, whether_der=False,
@@ -1089,7 +1089,7 @@ class PDBBIND(tasks.PropertyPrediction):
 
             return D_features
 
-        else:  # for the case that current angle information is not provided for current protein
+        else: # for the case that current angle information is not provided for current protein
             return torch.zeros([graph.num_node, 2]).to(self.device)
 
     def dihedral_generator(self, graph, angle_index, center_pos, eps=1e-7):
@@ -1524,7 +1524,7 @@ class M1101(tasks.InteractionPrediction):
 
             return D_features
 
-        else:  # for the case that current angle information is not provided for current protein
+        else: # for the case that current angle information is not provided for current protein
             return torch.zeros([graph.num_node, 2]).to(self.device)
 
     def dihedral_generator(self, graph, angle_index, center_pos, eps=1e-7):
