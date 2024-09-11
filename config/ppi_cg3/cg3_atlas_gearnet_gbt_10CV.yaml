@@ -1,36 +1,28 @@
-# output_dir: F:/UOB/External Dataset/ATLAS/scratch/downstream_outputs
-output_dir: downstream_cgmodels/cg_ATLAS/
+# specify your model output location
+output_dir: MCGLPPI/downstream_files/ATLAS/scratch/downstream_outputs
 
 dataset:
   class: ATLASDataset
 
   # the path for storing the downstream source data
-  # data_path: F:/UOB/External Dataset/ATLAS_source/atlas_data_full/
-  # data_path: F:/UOB/External Dataset/ATLAS_source/atlas_data_subset/
-  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/atlas/
+  data_path: MCGLPPI/downstream_files/ATLAS/m3_altas_data_full/ # 531-set
 
-  # the path for storing the output processed pickle file
-  # output_path: F:/UOB/External Dataset/ATLAS_source/
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/atlas/
+  # the path for storing the output processed (model input) pickle file
+  output_path: MCGLPPI/downstream_files/ATLAS/
 
   # the path for storing the index of dataset splitting
-  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/ATLAS/ATLAS_10CV_index_seed512.jsonl
-  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/ATLAS/ATLAS_valid_subset_10CV_index_standard_seed512.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/ATLAS/ATLAS_10CV_index_seed512.jsonl
-  index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/ATLAS/ATLAS_valid_subset_10CV_index_standard_seed512.jsonl
+  index_path: MCGLPPI/downstream_files/ATLAS/ATLAS_10CV_index_seed512.jsonl # 531-set
 
   # the path for storing all label informatipn of current dataset
-  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/ATLAS/ATLAS.csv
-  label_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/ATLAS/ATLAS.csv
+  label_path: MCGLPPI/downstream_files/ATLAS/ATLAS.csv
 
-  # indicating current used data source pickle file (creating it if it does not exist)
-  # pickle_name: cg3_atlas_designed.pkl.gz
-  pickle_name: cg3_atlas_designed_subset.pkl.gz
+  # indicating current used (model input) pickle file (creating it if it does not exist)
+  pickle_name: cg3_atlas_designed.pkl.gz # 531-set
 
   use_extra_label: False # False: predict dG, True: predict kd
-  cropping_threshold: 10 # default: 10, 100 for full AA retaining based on contact_threshold: 8.5
+  cropping_threshold: 10 # the cropping function is performed on-the-fly
   contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
-  # * currently no transform functions are needed, the node and edge features can be generated in task.forward and CG3_GraphConstruction separately *
+  # currently no transform functions are needed, the node and edge features can be generated in task.forward and CG3_GraphConstruction separately
 
 task:
   class: ATLAS
@@ -40,16 +32,16 @@ task:
   # the hyper-parameters for MLP-based decoder
   num_mlp_layer: 3
   mlp_batch_norm: True # default: True
-  mlp_dropout: 0 # default: 0
+  mlp_dropout: 0 
 
   # the hyper-parameters for GBT-based decoder (use it when gbt_use exists)
   # gbt_use:
-    # learning_rate: 0.01 # MpbPPI: 0.001, SVSBI: 0.01
-    # max_depth: 8 # MpbPPI: 6 (4/6/8), SVSBI: 7/8/9, train size < 1000: 7
+    # learning_rate: 0.01
+    # max_depth: 8
     # max_features: 'sqrt'
-    # min_samples_split: 4 # MpbPPI: 3, SVSBI: 3/4/7, 1000 < train size < 5000: 4
-    # n_estimators: 10000 # MpbPPI: 50000, SVSBI: 10000
-    # subsample: 0.7 # MpbPPI: 0.7, SVSBI: 0.3/0.5/0/7, train size > 5000: 0.3
+    # min_samples_split: 4
+    # n_estimators: 10000
+    # subsample: 0.7
     # # n_iter_no_change: None # default: None
     # # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
     # validation_fraction: 0.1
@@ -58,6 +50,7 @@ task:
     class: CG22_GearNetIEConv
     input_dim: 31 # bead type number (23) + 4*2 angle features (angle_enhance=True)
     # input_dim: 23 # bead type number
+    
     hidden_dims: [256, 256, 256, 256, 256, 256]
     batch_norm: True
     concat_hidden: True
@@ -94,46 +87,29 @@ optimizer:
   class: Adam
   lr: 1.0e-4
 
-  # class: SGD
-  # lr: 1.0e-3
-  # weight_decay: 5.0e-4
-  # # weight_decay: 0
-  # momentum: 0.98
-
 # scheduler:
-#   class: ReduceLROnPlateau
-#   mode: max
-#   factor: 0.6
-#   patience: 5
-#   class: StepLR
-#   step_size: 50
-#   gamma: 0.5
+   # class: StepLR
+   # step_size: 50
+   # gamma: 0.5
 
 engine:
   gpus: [0]
-  batch_size: 64
-  # new hyperparameter compared with pretraining phase
-  num_worker: 0 # default: 4 (not applicable in laptop)
+  batch_size: 64 # default: 64
+  num_worker: 0
 
+# comment out the 'model_checkpoint' argument to enable training-from-scratch
 # model_checkpoint: {{ ckpt }}
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
-model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_1_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
+# diffusion denoising pretraining (local):
+# model_checkpoint: martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 train:
   model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
   num_epoch: 150
   early_stop: 40
 
-  # * comment out the time limitation hyperparameters for comparing time used for CG-based models with models based on residue and atoms scales *
-  # * please note that these hyperparameters are only used for train/val/test sets during model training, the final independent test set is not influenced by these *
-  # train_time: 120
-  # val_time: 20
-  # test_time: 100
-
   # the specified metric controlling the best model saved based on best-val
-  # {'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]')}
-  # eval_metric: root mean squared error [binding_affinity]
   eval_metric: pearsonr [binding_affinity]
 
-# extra information attached to the saved model name
+# extra information to be attached to the name of the output model
 extra: 0
