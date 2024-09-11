@@ -83,13 +83,13 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
 3. After the preparation of the source data for MCGLPPI, the .yaml running scripts can be used to evaluate the model performance based on different data splitting settings. Please follow the illustration in corresponding scripts to set the hyper-parameters for evaluation configurations (the data splitting file ['index_path' argument] and whether to use the pre-trained graph encoder checkpoint ['model_checkpoint' argument] can be specified in these scripts). The running examples including training and evaluation are as follows:
 
-   Example 1 (in a standard tenfold cross-validation (CV) setting):
+   __Example 1__ (in a standard tenfold cross-validation (CV) setting):
 
    python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml (MARTINI2)
 
    python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml (MARTINI3)
 
-   Example 2 (in a stricter overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
+   __Example 2__ (in a stricter overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
 
    python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_TMscore.yaml (MARTINI2)
 
