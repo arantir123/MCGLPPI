@@ -97,7 +97,15 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
 __(2) dG predictions based on the ATLAS dataset__
 
-1. The used dataset is curated from https://onlinelibrary.wiley.com/doi/full/10.1002/prot.25260, https://github.com/weng-lab/ATLAS/blob/master/README.md. The purpose of examining MCGLPPI on this dataset is to check the feasiability of handling more complex geometric binding patterns (beyond the strict dimers) for identifying similar structures based on simulation.
+1. The used dataset is curated from https://onlinelibrary.wiley.com/doi/full/10.1002/prot.25260, https://github.com/weng-lab/ATLAS/blob/master/README.md. The purpose of examining MCGLPPI on this dataset is to check the feasiability of handling more complex geometric binding patterns (beyond the strict dimers) for identifying similar structures based on computational simulation.
+
+2. We provide the relevant original data as follows:
+
+   1) https://drive.google.com/file/d/1SA7fXpbF2r6co7KkPxn0LSeCe_Noau-J/view?usp=sharing (original data for full-atom and MARTINI2)
+
+   2) https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing (original data for MARTINI3)
+  
+   3) PDBBINDdimer_strict_index.csv in downstream_files/ATLAS/ (all dG labels for corresponding complex structures)
 
    
 
