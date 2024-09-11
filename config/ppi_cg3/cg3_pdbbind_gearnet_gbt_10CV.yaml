@@ -121,5 +121,5 @@ train:
   # eval_metric: root mean squared error [binding_affinity]
   eval_metric: pearsonr [binding_affinity]
 
-# extra information attached to the saved model name
+# extra information to be attached to the name of the output model
 extra: 0
