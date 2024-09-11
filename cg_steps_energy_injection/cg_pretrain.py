@@ -10,8 +10,8 @@ from torchdrug.utils import comm
 from torchdrug import core, models, tasks, datasets, utils
 
 from siamdiff import dataset, model, task, transform
-# new added import for performing CG-scale pre-training
 
+# new added import for performing CG-scale pre-training
 from cg_steps_energy_injection import cg_pretraining_dataset, cg_edgetransform, cg_graphconstruct, 
     cg_models, cg_protein, cg_task_preprocess_type1
 
