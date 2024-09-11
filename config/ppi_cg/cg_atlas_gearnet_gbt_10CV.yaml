@@ -1,0 +1,154 @@
+# output_dir: F:/UOB/External Dataset/ATLAS/scratch/downstream_outputs
+output_dir: downstream_cgmodels/cg_ATLAS/
+
+dataset:
+  class: ATLASDataset
+
+  # the path for storing the downstream source data
+  # data_path: F:/UOB/External Dataset/ATLAS_source/atlas_data_subset/
+  # data_path: F:/UOB/External Dataset/ATLAS_source/atlas_data_full/
+  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/atlas/
+
+  # the path for storing the output processed pickle file
+  # output_path: F:/UOB/External Dataset/ATLAS_source/
+  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/atlas/
+
+  # the path for storing the index of dataset splitting
+  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff/downstream_files/ATLAS/ATLAS_valid_subset_10CV_index_standard_seed512.jsonl
+  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff/downstream_files/ATLAS/ATLAS_10CV_index_seed512.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/ATLAS/ATLAS_valid_subset_10CV_index_standard_seed1024.jsonl
+  index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/ATLAS/ATLAS_10CV_index_seed512.jsonl
+
+  # the path for storing all label informatipn of current dataset
+  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff/downstream_files/ATLAS/ATLAS.csv
+  label_path: /bask/homes/y/yxy142/cgdiff/downstream_files/ATLAS/ATLAS.csv
+
+  # indicating current used data source pickle file (creating it if it does not exist)
+  # pickle_name: cg_atlas_designed_subset.pkl.gz
+  pickle_name: cg_atlas_designed.pkl.gz
+
+  use_extra_label: False # False: predict dG, True: predict kd
+  cropping_threshold: 10 # default: 10, 100 for full AA retaining based on contact_threshold: 8.5
+  contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
+  # * currently no transform functions are needed, the node and edge features can be generated in task.forward and CG22_GraphConstruction separately *
+
+task:
+  class: ATLAS
+  angle_enhance: True
+  normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
+
+  # the hyper-parameters for NN-based decoder
+  num_mlp_layer: 3
+  mlp_batch_norm: True # default: False, False for atom-level PSR regression task, True for residue-level ATOM3D classification task
+  mlp_dropout: 0 # default: 0, 0 for atom-level PSR regression task, 0.5 for residue-level ATOM3D classification task
+
+  # the hyper-parameters for GBT-based decoder (use it when gbt_use exists)
+  # gbt_use:
+    # learning_rate: 0.01 # MpbPPI: 0.001, SVSBI: 0.01
+    # max_depth: 8 # MpbPPI: 6 (4/6/8), SVSBI: 7/8/9, train size < 1000: 7
+    # max_features: 'sqrt'
+    # min_samples_split: 4 # MpbPPI: 3, SVSBI: 3/4/7, 1000 < train size < 5000: 4
+    # n_estimators: 10000 # MpbPPI: 50000, SVSBI: 10000
+    # subsample: 0.7 # MpbPPI: 0.7, SVSBI: 0.3/0.5/0/7, train size > 5000: 0.3
+    # # n_iter_no_change: None # default: None
+    # # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
+    # validation_fraction: 0.1
+
+  model: # the scale and edge type used here is for atom-based learning (rather than the residue-based model used in FOLD3D)
+    class: CG22_GearNetIEConv
+    input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
+    # input_dim: 17 # bead type number
+    hidden_dims: [256, 256, 256, 256, 256, 256]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: sum
+    # num_relation: 1 # original relation number (only containing radius edges)
+    num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+    edge_input_dim: 53 # cg22_gearnet: 46 + num_relation
+    # edge_input_dim: 59 # gearnet: 52 + num_relation
+    num_angle_bin: 8
+    # extra hyperparameter for GearNetIEConv-based models:
+    embedding_dim: 256 # extra linear embedding layer
+    # layer_norm: True
+    # dropout: 0.2
+    # use_ieconv: True
+
+  # only spatial edge used here (atom scale)
+  graph_construction_model:
+    class: CG22_GraphConstruction
+    edge_layers:
+      # - class: SpatialEdge
+        # radius: 4.5
+        # min_distance: 0
+      - class: AdvSpatialEdge
+        radius: 5 # empirically, martini2.2 based edge cutoff can also be tried starting from 4A~5A
+        min_distance: 0
+        across_res_mask: True # distinguish whether bead nodes are across two residues or not
+        cg_edge_enhance: True # enhance the radius edge with CG defined edges
+        cg_edge_reduction: False # whether to remove the duplicate CG edges on the top of the radius edges
+    edge_feature: cg22_gearnet # input attribute of initialization function of CG22_GraphConstruction
+    # edge_feature: gearnet
+
+optimizer:
+  class: Adam
+  lr: 1.0e-4
+
+  # class: SGD
+  # lr: 1.0e-3
+  # weight_decay: 5.0e-4
+  # # weight_decay: 0
+  # momentum: 0.98
+
+# scheduler:
+#   class: ReduceLROnPlateau
+#   mode: max
+#   factor: 0.6
+#   patience: 5
+#   class: StepLR
+#   step_size: 50
+#   gamma: 0.5
+
+engine:
+  gpus: [0]
+  batch_size: 32
+  # new hyperparameter compared with pretraining phase
+  num_worker: 0 # default: 4, causing errors in laptop
+
+# model_checkpoint: {{ ckpt }}
+
+# diffusion denoising pretraining (server):
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miTrue.pth # 0.5498
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch25_bbfeatsFalse_miTrue.pth # 0.5442
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsTrue_miTrue.pth # 0.5294
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma1.1_bs32_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miTrue.pth # 0.5542
+
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch100_dim256_length150_radius5_extra_step2_0_ls3did_fepoch100_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch100_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch200_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch100_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
+
+# distance denoising pretraining:
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDistancePrediction/_3did/CG22_GearNetIEConv/pretrain_seed0_bs128_epoch100_dim256_length100_radius5_extra_0_l3did.pth # 0.5437
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDistancePrediction/_3did/CG22_GearNetIEConv/pretrain_seed0_bs128_epoch50_dim256_length100_radius5_extra_0_l3did.pth # 0.5130
+
+train:
+  model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
+  num_epoch: 150
+  early_stop: 40
+
+  # * comment out the time limitation hyperparameters for comparing time used for CG-based models with models based on residue and atoms scales *
+  # * please note that these hyperparameters are only used for train/val/test sets during model training, the final independent test set is not influenced by these *
+  # train_time: 120 # atom-level PIP: 120, atom-level MSP/PSR: 120
+  # val_time: 20 # atom-level PIP: 20, atom-level MSP/PSR: 20
+  # test_time: 100 # atom-level PIP: 10, atom-level MSP/PSR: 100
+
+  # the specified metric controlling the best model saved based on best-val
+  # {'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]')}
+  # eval_metric: root mean squared error [binding_affinity]
+  eval_metric: pearsonr [binding_affinity] # spearmanr [gdt_ts] for atom-level PSR
+
+# extra information attached to the saved model name
+extra: 0
