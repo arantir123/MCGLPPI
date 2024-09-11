@@ -1,0 +1,160 @@
+# output_dir: F:/UOB/External Dataset/M1101/scratch/downstream_outputs
+output_dir: downstream_cgmodels/cg_M1101/
+
+dataset:
+  class: M1101Dataset
+
+  # the path for storing the downstream source data
+  # data_path: F:/UOB/External Dataset/M1101_source/M1101_data_full/
+  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/m1101/
+
+  # the path for storing the output processed pickle file
+  # output_path: F:/UOB/External Dataset/M1101_source/
+  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/m1101/
+
+  # the path for storing the index of dataset splitting
+  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_CV10_random_data_split_256.jsonl
+  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_complex_data_split_256.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_complex_data_split_256.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_complex_data_split_1002.jsonl
+  index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_train_test_tm_0.5.jsonl
+  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_train_test_tm_0.4.jsonl
+
+  # the path for storing all label information of current dataset
+  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_label.csv
+  label_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_label.csv
+
+  # indicating current used data source pickle file (creating it if it does not exist)
+  pickle_name: cg2_m1101.pkl.gz
+
+  cropping_threshold: 10 # the cropping function is performed on-the-fly
+  contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
+  # currently no transform functions are needed, the node and edge features can be generated in task.forward and CG22_GraphConstruction separately
+
+task:
+  class: M1101
+  angle_enhance: True
+  normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
+
+  # the hyperparameters for MLP-based decoder
+  num_mlp_layer: 3
+  mlp_batch_norm: True
+  mlp_dropout: 0.5
+
+  # energy parameters (only valid when energy_inject=True)
+  energy_inject: False
+  vdw_radius_coef: 0.2
+  energy_shortcut: True # True: prediction = MLP(graph_emb) + MLP(energy), False: prediction = MLP(energy)
+
+  whether_ES: True # True: also incorporate electrostatic term into energy calculation
+  whether_der: False # whether to use derivatives to rectify the potential energy curve
+  der_cal_across_protein: False # whether to use the derivative loss calculated protein-wise (False: no use)
+  loss_der1_ratio: 100 # work under whether_der == True
+  loss_der2_ratio: 100 # work under whether_der == True
+
+  # the hyperparameters for GBT-based decoder (use it when gbt_use exists)
+  # gbt_use:
+  #   learning_rate: 0.001 # MpbPPI: 0.001, SVSBI: 0.01, default: 0.01
+  #   max_depth: 6 # MpbPPI: 6 (4/6/8), SVSBI: 7/8/9, train size < 1000: 7, default: 8
+  #   max_features: 'sqrt'
+  #   min_samples_split: 3 # MpbPPI: 3, SVSBI: 3/4/7, 1000 < train size < 5000: 4, default: 4
+  #   n_estimators: 50000 # MpbPPI: 50000, SVSBI: 10000, default: 10000
+  #   subsample: 0.7 # MpbPPI: 0.7, SVSBI: 0.3/0.5/0/7, train size > 5000: 0.3, default: 0.7
+  #   # n_iter_no_change: None # default: None
+  #   # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
+  #   validation_fraction: 0.1
+
+  model:
+    class: CG22_GearNetIEConv
+    input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
+    hidden_dims: [256, 256, 256, 256, 256, 256]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: sum
+    # num_relation: 1 # original relation number (only containing radius edges)
+    num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+    edge_input_dim: 53 # cg22_gearnet: 46 + num_relation
+    num_angle_bin: 8
+    # extra hyperparameter for GearNetIEConv-based models:
+    embedding_dim: 256 # extra linear embedding layer
+    # layer_norm: True
+    # dropout: 0.2
+    # use_ieconv: True
+
+  graph_construction_model:
+    class: CG22_GraphConstruction
+    edge_layers:
+      # - class: SpatialEdge
+        # radius: 4.5
+        # min_distance: 0
+      - class: AdvSpatialEdge
+        radius: 5 # empirically, martini2.2 based edge cutoff can also be tried starting from 4A~5A
+        min_distance: 0
+        across_res_mask: True # distinguish whether bead nodes are across two residues or not
+        cg_edge_enhance: True # enhance the radius edge with CG defined edges
+        cg_edge_reduction: False # whether to remove the duplicate CG edges on the top of the radius edges
+    edge_feature: cg22_gearnet # input attribute of initialization function of CG22_GraphConstruction
+
+optimizer:
+  class: Adam
+  lr: 1.0e-4
+
+  # class: SGD
+  # lr: 1.0e-3
+  # weight_decay: 5.0e-4
+  # # weight_decay: 0
+  # momentum: 0.98
+
+# scheduler:
+#   class: ReduceLROnPlateau
+#   mode: max
+#   factor: 0.6
+#   patience: 5
+#   class: StepLR
+#   step_size: 50
+#   gamma: 0.5
+
+engine:
+  gpus: [0]
+  batch_size: 64
+  num_worker: 0
+
+# model_checkpoint: {{ ckpt }}
+# diffusion denoising pretraining (local):
+# model_checkpoint: D:/PROJECT B2_5/code/raw code/CG Diffusion/trained_models/3did/cg/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+
+# diffusion denoising pretraining (server):
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch200_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch100_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
+
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miTrue.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch25_bbfeatsFalse_miTrue.pth 
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsTrue_miTrue.pth 
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma1.1_bs32_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miTrue.pth
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miFalse.pth 
+
+# distance denoising pretraining:
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDistancePrediction/_3did/CG22_GearNetIEConv/pretrain_seed0_bs128_epoch100_dim256_length100_radius5_extra_0_l3did.pth # 0.5437
+# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDistancePrediction/_3did/CG22_GearNetIEConv/pretrain_seed0_bs128_epoch50_dim256_length100_radius5_extra_0_l3did.pth # 0.5130
+
+train:
+  model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
+  num_epoch: 4
+  early_stop: 4
+
+  # * comment out the time limitation hyperparameters for comparing time used for CG-based models with models based on residue and atom scales *
+  # * note that these hyperparameters are only used for train/val/test sets during model training, the final independent test set is not influenced by these *
+  # train_time: 120
+  # val_time: 20
+  # test_time: 100
+
+  # the specified metric controlling the best model saved based on best-val
+  # {'mean absolute error [binding_affinity_change]', 'root mean squared error [binding_affinity_change]', 'pearsonr [binding_affinity_change]')}
+  # eval_metric: root mean squared error [binding_affinity_change]
+  eval_metric: pearsonr [binding_affinity_change]
+
+# extra information attached to the saved model name
+extra: 0
