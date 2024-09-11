@@ -59,7 +59,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-   The below one is the encoder pre-trained on the further 33,144 subset described in the original manuscript:
+   The below one is the encoder pre-trained on the further 33,144-sample subset described in the original manuscript:
 
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
