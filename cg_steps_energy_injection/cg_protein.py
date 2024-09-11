@@ -1241,6 +1241,8 @@ class CG22_PackedProtein(PackedMolecule, CG22_Protein):
                           sidechain_angles=self.sidechain_angles, backbone_dihedrals=self.backbone_dihedrals,
                           intermol_mat=self.intermol_mat, meta_dict=meta_dict, **data_dict)
 
+    # ** the following functions are cloned from the code of the original scale: https://github.com/DeepGraphLearning/torchdrug/ **
+    # ** which will be further updated if the corresponding CG functions are required **
     def residue_mask(self, index, compact=False):
         """
         Return a masked packed protein based on the specified residues.
