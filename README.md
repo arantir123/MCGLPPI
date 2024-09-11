@@ -141,9 +141,9 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
 1. This dataset is used to examine the model's ability to distinguish/classify the biological interface from crystal artefacts (https://www.nature.com/articles/s41467-021-27396-0). We provide relevant files as follows:
    
-   1)  (original data for full-atom and MARTINI2)
+   1) https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing (original data for full-atom and MARTINI2)
 
-   2)  (original data for MARTINI3)
+   2) https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing (original data for MARTINI3)
   
    3) MANYDC.csv in downstream_files/MANYDC/ (all binary classification labels for corresponding complex structures)
 
