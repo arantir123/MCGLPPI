@@ -3,11 +3,9 @@ from torch import nn
 from torchdrug import core, data
 from torchdrug.layers import functional
 from torchdrug.core import Registry as R
-# from torchdrug.data import CG22_PackedProtein
-from cg_steps.cg_protein import CG22_PackedProtein
+from cg_steps_energy_injection.cg_protein import CG22_PackedProtein
 
 
-# ** should be registered in torchdrug.layers.geometry.__init__, for to be searched by the register function **
 @R.register("layers.CG22_GraphConstruction")
 class CG22_GraphConstruction(nn.Module, core.Configurable):
     """
@@ -101,7 +99,7 @@ class CG22_GraphConstruction(nn.Module, core.Configurable):
             graph = layer(graph)
         return graph
 
-    # *** in current mode, only the first edge_layer function in input list is supported ***
+    # ** in current mode, only the first edge_layer function in input list is supported **
     def apply_edge_layer(self, graph):
         if not self.edge_layers:
             return graph
