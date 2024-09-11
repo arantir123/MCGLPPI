@@ -115,9 +115,9 @@ __(2) dG predictions based on the ATLAS dataset__
 
    __Example 1__ (in a standard tenfold cross-validation (CV) setting):
 
-   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt.yaml (MARTINI2)
+   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml (MARTINI2)
 
-   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt.yaml (MARTINI3)
+   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt_10CV.yaml (MARTINI3)
    
 
    
