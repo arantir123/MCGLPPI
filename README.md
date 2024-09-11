@@ -77,7 +77,7 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    https://drive.google.com/file/d/14-0QF0b8JeXUU57yMzTdTPzvsNP_ayUv/view?usp=sharing (MARTINI2 and MARTINI3)
 
-3. After the preparation of the source data for MCGLPPI, the .yaml running scripts can be used to evaluate the model performance based on different data splitting settings. Please follow the illustration in corresponding scripts to set the hyper-parameters for evaluation configurations (the data splitting file ['index_path' argument] and whether to use the pre-trained graph encoder checkpoint ['model_checkpoint' argument] can be specified in these scripts):
+3. After the preparation of the source data for MCGLPPI, the .yaml running scripts can be used to evaluate the model performance based on different data splitting settings. Please follow the illustration in corresponding scripts to set the hyper-parameters for evaluation configurations (the data splitting file ['index_path' argument] and whether to use the pre-trained graph encoder checkpoint ['model_checkpoint' argument] can be specified in these scripts). The running examples including training and evaluation are as follows:
 
    Example 1 (in a standard tenfold cross-validation (CV) setting):
 
