@@ -87,11 +87,6 @@ optimizer:
   class: Adam
   lr: 1.0e-4
 
-# scheduler:
-   # class: StepLR
-   # step_size: 50
-   # gamma: 0.5
-
 engine:
   gpus: [0]
   batch_size: 64 # default: 64
