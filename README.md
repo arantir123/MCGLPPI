@@ -109,7 +109,16 @@ __(2) dG predictions based on the ATLAS dataset__
 
 3. We also provide the corresponding pickle files for a quick start:
 
-    (MARTINI2 and MARTINI3)
+   https://drive.google.com/file/d/1dWUoIPK_F4C_hKY5cG5aM1cQJS13azuv/view?usp=sharing (MARTINI2 and MARTINI3)
+
+4. Running examples:
+
+   __Example 1__ (in a standard tenfold cross-validation (CV) setting):
+
+   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt.yaml (MARTINI2)
+
+   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt.yaml (MARTINI3)
+   
 
    
 
