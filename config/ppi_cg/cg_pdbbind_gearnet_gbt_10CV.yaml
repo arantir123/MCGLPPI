@@ -34,7 +34,7 @@ task:
 
   # the hyper-parameters for MLP-based decoder
   num_mlp_layer: 3
-  mlp_batch_norm: True
+  mlp_batch_norm: True # default: True
   mlp_dropout: 0.5
 
   # the hyper-parameters for GBT-based decoder (use it when gbt_use exists)
