@@ -1,0 +1,116 @@
+# specify your model output location
+output_dir: MCGLPPI/downstream_files/PDBBIND/scratch/downstream_outputs
+
+dataset:
+  class: PDBBINDDataset
+
+  # the path for storing the downstream source data
+  # data_path: MCGLPPI/downstream_files/PDBBIND/m2_pdbbind_dimer_strict/ # 1270-set
+  data_path: MCGLPPI/downstream_files/PDBBIND/m2_pdbbind_dimer_strict_subset/ # 915-subset
+
+  # the path for storing the output processed (model input) pickle file
+  output_path: MCGLPPI/downstream_files/PDBBIND/
+
+  # the path for storing the index of dataset splitting
+  # index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_10CV_index_seed512.jsonl # 1270-set
+  index_path: MCGLPPI/downstream_files/PDBBIND/PDBBINDdimer_strict_subset_10CV_index_standard_seed1024.jsonl # 915-subset
+
+  # the path for storing all label information of current dataset
+  label_path: MCGLPPI/downstream_files/PDBBIND/PDBBIND.csv
+
+  # indicating current used (model input) pickle file (creating it if it does not exist)
+  # pickle_name: cg2_pdbbind_strictdimer.pkl.gz # 1270-set
+  pickle_name: cg2_pdbbind_strictdimer_subset.pkl.gz # 915-subset
+
+  use_extra_label: True # determine whether to use extra dG label rather than the pkd label (True: predicting dG labels)
+  cropping_threshold: 10 # the cropping function is performed on-the-fly
+  contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
+  # currently no transform functions are needed, the node and edge features can be generated in task.forward and CG22_GraphConstruction separately
+
+task:
+  class: PDBBIND
+  angle_enhance: True
+  normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
+
+  # the hyper-parameters for MLP-based decoder
+  num_mlp_layer: 3
+  mlp_batch_norm: True # default: True
+  mlp_dropout: 0.5
+
+  # the hyper-parameters for GBT-based decoder (use it when gbt_use exists)
+  # gbt_use:
+    # learning_rate: 0.01
+    # max_depth: 8
+    # max_features: 'sqrt'
+    # min_samples_split: 4
+    # n_estimators: 10000
+    # subsample: 0.7
+    # # n_iter_no_change: None # default: None
+    # # validation_fraction must be in the range (0.0, 1.0), only used if n_iter_no_change is set to an integer
+    # validation_fraction: 0.1
+
+  model:
+    class: CG22_GearNetIEConv
+    input_dim: 25 # bead type number (17) + 4*2 angle features (angle_enhance=True)
+    # input_dim: 17 # bead type number
+    
+    hidden_dims: [256, 256, 256, 256, 256, 256]
+    batch_norm: True
+    concat_hidden: True
+    short_cut: True
+    readout: sum
+    # num_relation: 1 # original relation number (only containing radius edges)
+    num_relation: 7 # across_res_mask: +1, cg_edge_enhance: +5
+    
+    edge_input_dim: 53 # cg22_gearnet: 46 + num_relation
+    # edge_input_dim: 59 # gearnet: 52 + num_relation
+    num_angle_bin: 8
+    # extra hyperparameter for GearNetIEConv-based models:
+    embedding_dim: 256 # extra linear embedding layer
+    # layer_norm: True
+    # dropout: 0.2
+    # use_ieconv: True
+
+  graph_construction_model:
+    class: CG22_GraphConstruction
+    edge_layers:
+      # - class: SpatialEdge
+        # radius: 4.5
+        # min_distance: 0
+      - class: AdvSpatialEdge
+        radius: 5 # empirically, martini2.2 based edge cutoff can also be tried starting from 4A~5A
+        min_distance: 0
+        across_res_mask: True # distinguish whether bead nodes are across two residues or not
+        cg_edge_enhance: True # enhance the radius edge with CG defined edges
+        cg_edge_reduction: False # whether to remove the duplicate CG edges on the top of the radius edges
+    edge_feature: cg22_gearnet # input attribute of initialization function of CG22_GraphConstruction
+    # edge_feature: gearnet
+
+optimizer:
+  class: Adam
+  lr: 1.0e-4
+
+# scheduler:
+   # class: StepLR
+   # step_size: 50
+   # gamma: 0.5
+
+engine:
+  gpus: [0]
+  batch_size: 64 # default: 64
+  num_worker: 0
+
+# comment out the 'model_checkpoint' argument to enable training-from-scratch
+# model_checkpoint: {{ ckpt }}
+# diffusion denoising pretraining (specify the pretrained CG graph encoder location below):
+model_checkpoint: MCGLPPI/pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+
+train:
+  model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
+  num_epoch: 150
+  early_stop: 40
+
+  eval_metric: pearsonr [binding_affinity]
+
+# extra information to be attached to the name of the output model
+extra: 0
