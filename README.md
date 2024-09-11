@@ -127,7 +127,7 @@ __(3) ddG predictions based on the AB-bind dataset__
 
    2) M1101_label.csv in downstream_files/M1101/ (all ddG labels for corresponding wild-type (WT) - mutant (MT) complex structure pairs)
   
-2. We also provide the corresponding pickle files for a quick start:
+2. We also provide the corresponding pickle file for a quick start:
 
    https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing (MARTINI2)
    
