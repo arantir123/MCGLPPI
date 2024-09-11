@@ -754,7 +754,7 @@ def square_distance(src, dst):
     return dist
 
 
-# * Important Note: for current logic, if over-large proteins are found, this protein will be ignored (returned with the specific identifier) *
+# * Important note: for current logic, if over-large proteins are found, this protein will be ignored (returned with the specific identifier) *
 # * besides, currently we do not need to consider non-natural AAs/incomplete proteins/AALA+BALA cases, as these cases will be handled in the pre-processed steps earlier than here *
 def cleaning_cg_pdb(cglines, pdb, AA_num_threshold=3000):
     # the residue serial numbers in CG pdbs are based on those in original pdb files, which may not be consecutive
@@ -1054,8 +1054,8 @@ def get_coords(line):
 
 
 # the class for combining multiple CG_Protein objects into one batch-graph object
-# Note: functions which are not utilized in current CGDiff implementation are incomplete for processing CG22_Protein objects
-# which will be further updated in the future, e.g., the detach and clone functions, needing the support of handling angle info
+# Note: functions for processing CG22_Protein objects which are not utilized in current implementation are under construction, 
+# which will be further updated in the future, e.g., the detach and clone functions, requiring the support of handling angle info
 class CG22_PackedProtein(PackedMolecule, CG22_Protein):
     """
     Container for proteins with variadic sizes.
