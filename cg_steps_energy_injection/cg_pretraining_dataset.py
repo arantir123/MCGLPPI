@@ -1,11 +1,12 @@
-# currently consider directly read the CG original files (organized as the original generation form)
+# * currently consider directly read the CG original files (organized as the original generation form from MARTINI) *
 import os
 import logging
 import warnings
 from tqdm import tqdm
 from torchdrug import data, utils
 from torchdrug.core import Registry as R
-from cg_steps import cg_protein
+
+from cg_steps_energy_injection import cg_protein
 
 logger = logging.getLogger(__name__)
 
