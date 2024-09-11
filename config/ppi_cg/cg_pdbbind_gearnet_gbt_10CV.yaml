@@ -110,6 +110,7 @@ train:
   num_epoch: 150
   early_stop: 40
 
+  # the specified metric controlling the best model saved based on best-val
   eval_metric: pearsonr [binding_affinity]
 
 # extra information to be attached to the name of the output model
