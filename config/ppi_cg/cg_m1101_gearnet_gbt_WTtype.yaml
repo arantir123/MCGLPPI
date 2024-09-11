@@ -94,44 +94,21 @@ optimizer:
 
 engine:
   gpus: [0]
-  batch_size: 64
+  batch_size: 64 # default: 64
   num_worker: 0
 
+# comment out the 'model_checkpoint' argument to enable training-from-scratch
 # model_checkpoint: {{ ckpt }}
-# diffusion denoising pretraining (local):
-# model_checkpoint: D:/PROJECT B2_5/code/raw code/CG Diffusion/trained_models/3did/cg/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
-
-# diffusion denoising pretraining (server):
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch200_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch100_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
-model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
-
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miTrue.pth
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch25_bbfeatsFalse_miTrue.pth 
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsTrue_miTrue.pth 
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma1.1_bs32_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miTrue.pth
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch100_bbfeatsFalse_miFalse.pth 
-
-# distance denoising pretraining:
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDistancePrediction/_3did/CG22_GearNetIEConv/pretrain_seed0_bs128_epoch100_dim256_length100_radius5_extra_0_l3did.pth # 0.5437
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDistancePrediction/_3did/CG22_GearNetIEConv/pretrain_seed0_bs128_epoch50_dim256_length100_radius5_extra_0_l3did.pth # 0.5130
+# diffusion denoising pretraining (specify the pretrained CG graph encoder location below):
+model_checkpoint: MCGLPPI/pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 train:
   model_save_mode: val # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
-  num_epoch: 4
-  early_stop: 4
-
-  # * comment out the time limitation hyperparameters for comparing time used for CG-based models with models based on residue and atom scales *
-  # * note that these hyperparameters are only used for train/val/test sets during model training, the final independent test set is not influenced by these *
-  # train_time: 120
-  # val_time: 20
-  # test_time: 100
+  num_epoch: 25
+  early_stop: 10
 
   # the specified metric controlling the best model saved based on best-val
-  # {'mean absolute error [binding_affinity_change]', 'root mean squared error [binding_affinity_change]', 'pearsonr [binding_affinity_change]')}
-  # eval_metric: root mean squared error [binding_affinity_change]
   eval_metric: pearsonr [binding_affinity_change]
 
-# extra information attached to the saved model name
+# extra information to be attached to the name of the output model
 extra: 0
