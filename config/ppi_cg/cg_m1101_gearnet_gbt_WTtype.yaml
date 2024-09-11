@@ -93,13 +93,9 @@ optimizer:
   lr: 1.0e-4
 
 # scheduler:
-#   class: ReduceLROnPlateau
-#   mode: max
-#   factor: 0.6
-#   patience: 5
-#   class: StepLR
-#   step_size: 50
-#   gamma: 0.5
+   # class: StepLR
+   # step_size: 10
+   # gamma: 0.5
 
 engine:
   gpus: [0]
