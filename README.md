@@ -105,7 +105,11 @@ __(2) dG predictions based on the ATLAS dataset__
 
    2) https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing (original data for MARTINI3)
   
-   3) PDBBINDdimer_strict_index.csv in downstream_files/ATLAS/ (all dG labels for corresponding complex structures)
+   3) ATLAS.csv in downstream_files/ATLAS/ (all dG labels for corresponding complex structures)
+
+3. We also provide the corresponding pickle files for a quick start:
+
+    (MARTINI2 and MARTINI3)
 
    
 
