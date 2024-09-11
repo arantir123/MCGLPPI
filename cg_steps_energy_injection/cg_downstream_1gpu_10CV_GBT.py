@@ -290,7 +290,7 @@ def GBT_test(dataset, model, max_time=None, device=None):
     return pred, target, names
 
 
-# * compared with cg_downstream_1gpu_GBT_reg.py, an extra loop is created for each fold, where the json file for current loop will be temporarily saved for data splitting *
+# * in this script, an extra loop is created for each fold, where the json file for current loop will be temporarily saved for data splitting *
 # * this script is also added the support of retrieving embeddings for each protein complex from pre-trained model (controlled by above parameter 'whether_emb_save') *
 if __name__ == "__main__":
     args, vars = util.parse_args()
@@ -343,7 +343,7 @@ if __name__ == "__main__":
     else:
         gbt_pars = None
 
-    # record the time of starting 10-fold CV
+    # record the time of starting cross-validation
     current_time, t0 = datetime.now().strftime("%Y_%m_%d_%H_%M"), time.time()
     MAE_total, RMSE_total, PEARSON_total, label_total, prediction_total, name_total = [], [], [], [], [], []
     for fold in range(len(split_list)):
@@ -360,7 +360,6 @@ if __name__ == "__main__":
         cfg.dataset.index_path = temp_split_path # to be used in Dataset class for creating sample splitting for current batch
 
         # * currently this script is only used for regression tasks including PDBBIND, ATLAS, and M1101-like predictions
-        # could register the name of below datasets in torchdrug.data.__init__.py so that these datasets can be searched by load_config_dict
         if cfg.dataset["class"] in ["PDBBINDDataset", "ATLASDataset", "M1101Dataset"]:
             _dataset = core.Configurable.load_config_dict(cfg.dataset)
             train_set, valid_set, test_set = _dataset.split()
