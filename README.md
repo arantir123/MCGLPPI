@@ -94,6 +94,11 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
    python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_TMscore.yaml (MARTINI2)
 
    python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_TMscore.yaml (MARTINI3)
+
+__(2) dG predictions based on the ATLAS dataset__
+
+1. The used dataset is curated from https://onlinelibrary.wiley.com/doi/full/10.1002/prot.25260, https://github.com/weng-lab/ATLAS/blob/master/README.md. The purpose of examining MCGLPPI on this dataset is
+
    
 
 
