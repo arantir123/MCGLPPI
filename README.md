@@ -81,9 +81,19 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    Example 1 (in a standard tenfold cross-validation (CV) setting):
 
-   /config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml (MARTINI2)
+   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml (MARTINI2)
 
-   /config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml (MARTINI3)
+   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml (MARTINI3)
+
+   Example 2 (in a stricter overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
+
+   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_TMscore.yaml (MARTINI2)
+
+   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_TMscore.yaml (MARTINI3)
+   
+
+
+   
 
 
 UNDER CONSTRUCTION...
