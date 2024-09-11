@@ -135,13 +135,9 @@ __(3) ddG predictions based on the AB-bind dataset__
 
    __Example 1__ (in a WT protein-protein complex type-based fivefold CV setting, see https://academic.oup.com/bib/article/24/5/bbad310/7256145 for details, the splitting file is retrieved from https://github.com/arantir123/MpbPPI):
 
-   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml (MARTINI2)
+   python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml (MARTINI2)
    
-
-   
-
-
-TO BE CONTINUED...   
+__(4) protein-protein complex interface classifications based on the MANY/DC dataset__ 
 
 
 
