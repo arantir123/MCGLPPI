@@ -75,7 +75,6 @@ CG_q_constant_mat = [0, 1, -1] # pos 0: other, pos 1: Qd, pos 2: Qa
 @R.register("tasks.CGDiff")
 # ** in order to make load_config_dict identify this registered function, need to import CGDiff in the main function **
 class CGDiff(tasks.Task, core.Configurable):
-
     """
     Parameters:
         model (nn.Module): the protein structure encoder to be pre-trained
