@@ -1,24 +1,17 @@
-# output_dir: F:/UOB/External Dataset/M1101/scratch/downstream_outputs
-output_dir: downstream_cgmodels/cg_M1101/
+# specify your model output location
+output_dir: MCGLPPI/downstream_files/M1101/scratch/downstream_outputs
 
 dataset:
   class: M1101Dataset
 
   # the path for storing the downstream source data
-  # data_path: F:/UOB/External Dataset/M1101_source/M1101_data_full/
-  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/m1101/
+  data_path: MCGLPPI/downstream_files/M1101/M1101_data_full/
 
-  # the path for storing the output processed pickle file
-  # output_path: F:/UOB/External Dataset/M1101_source/
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/m1101/
+  # the path for storing the output processed (model input) pickle file
+  output_path: MCGLPPI/downstream_files/M1101/
 
   # the path for storing the index of dataset splitting
-  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_CV10_random_data_split_256.jsonl
-  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_complex_data_split_256.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_complex_data_split_256.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_complex_data_split_1002.jsonl
-  index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_train_test_tm_0.5.jsonl
-  # index_path: /bask/homes/y/yxy142/cgdiff_energy_injection/downstream_files/M1101/M1101_train_test_tm_0.4.jsonl
+  index_path: MCGLPPI/downstream_files/M1101/M1101_complex_data_split_256.jsonl
 
   # the path for storing all label information of current dataset
   # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff_energy_injection/downstream_files/M1101/M1101_label.csv
