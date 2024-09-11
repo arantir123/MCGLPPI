@@ -24,10 +24,10 @@ import cg_util
 from torchdrug.utils import comm
 from torchdrug import core, models, tasks, datasets, utils, data
 from siamdiff import dataset, model, task, transform
-from cg_steps import cg_pretraining_dataset, cg_downstream_dataset, cg_edgetransform, cg_graphconstruct, \
+
+from cg_steps_energy_injection import cg_pretraining_dataset, cg_downstream_dataset, cg_edgetransform, cg_graphconstruct, \
     cg_models, cg_protein
-from cg_steps import cg_task_preprocess_type1
-# from cg_steps import cg_task_preprocess_type2
+from cg_steps_energy_injection import cg_task_preprocess_type1
 
 # if use GBT as the decoder based on the activation of 'gbt_use', set whether_emb_save to True to save embeddings of all involved samples into local
 whether_emb_save = False
