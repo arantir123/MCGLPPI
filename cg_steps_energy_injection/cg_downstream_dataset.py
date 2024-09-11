@@ -11,7 +11,8 @@ import numpy as np
 from torchdrug import data, utils
 from torchdrug.core import Registry as R
 from torch.utils import data as torch_data
-from cg_steps import cg_protein
+
+from cg_steps_energy_injection import cg_protein
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,6 @@ class PPIDataset:
 # the contact residue identification could be used
 @R.register("datasets.PDBBINDDataset")
 # ** need to consider extra (1) protein cropping function (transform function), (2) label handling, (3) dataset splitting **
-# ** currently we do not need to inherent the functions provided in siamdiff.dataset.Atom3DDataset **
 class PDBBINDDataset(data.ProteinDataset, PPIDataset):
     # data_path: source data path, output_path: output pickle path, index_path: data splitting path
     def __init__(self, data_path, output_path, index_path, label_path, pickle_name='cg_pdbbind.pkl.gz', transform=None, AA_num_threshold=5000, raw_label_col='neg_log',
@@ -862,28 +862,3 @@ class M1101Dataset(data.ProteinDataset, PPIDataset):
             "#task: binding_affinity_change",
         ]
         return "%s(\n  %s\n)" % (self.__class__.__name__, "\n  ".join(lines))
-
-
-
-if __name__ == "__main__":
-    # Dataset function test
-    # the path for storing the downstream source data
-    # test_data_path = 'D:/PROJECT B2_5/note/CG_summary/cg_martini22_downstream_toy/'
-    test_data_path = 'D:/PROJECT B2_5/note/CG_summary/cg_martini22_manydc_toy/'
-
-    # the path for storing the output processed pickle file
-    # test_output_path = 'D:/PROJECT B2_5/note/CG_summary/cg_demo_martini22_output/'
-    test_output_path = 'D:/PROJECT B2_5/note/CG_summary/cg_demo_martini22_output/'
-
-    # the path for storing the index of dataset splitting
-    # test_index_path = 'D:/PROJECT B2_5/note/CG_summary/cg_demo_martini22_index/martini22_index.json'
-    test_index_path = 'D:/PROJECT B2_5/note/CG_summary/cg_demo_martini22_index/martini22_manydc_index.json'
-
-    # the path for storing all label informatipn of current dataset
-    # test_label_path = '../downstream_files/PDBBIND/PDBBIND.csv'
-    test_label_path = '../downstream_files/MANYDC/MANYDC.csv'
-
-    # dataset = PDBBINDDataset(test_data_path, test_output_path, test_index_path, test_label_path, label_type='neg_log', label_upper=6, label_lower=-2)
-    dataset = MANYDCDataset(test_data_path, test_output_path, test_index_path, test_label_path)
-
-    print('dataset:', dataset)
