@@ -139,6 +139,14 @@ __(3) ddG predictions based on the AB-bind dataset__
    
 __(4) protein-protein complex interface classifications based on the MANY/DC dataset__ 
 
+1. This dataset is used to examine the model's ability to distinguish/classify the biological interface from crystal artefacts (https://www.nature.com/articles/s41467-021-27396-0). We provide relevant files as follows:
+   
+   1)  (original data for full-atom and MARTINI2)
+
+   2)  (original data for MARTINI3)
+  
+   3) .csv in downstream_files// (all labels for corresponding complex structures)
+
 
 
 
