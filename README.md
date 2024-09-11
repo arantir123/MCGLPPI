@@ -121,9 +121,9 @@ __(2) dG predictions based on the ATLAS dataset__
 
 __(3) ddG predictions based on the AB-bind dataset__
 
-1. We demonstrate the potential of MCGLPPI on the extension into directly predicting ddG with the simple modifications. The ddG dataset used is a multiple-point mutation dataset AB-bind (https://pubmed.ncbi.nlm.nih.gov/26473627/), which contains 1101 sample points related to the binding affinity change (i.e., ddG) caused by multiple-point AA mutations on the complex formed from antibody or antibody-like binding. We provide relevant files as follows:
+1. We demonstrate the potential of MCGLPPI on the extension into directly predicting ddG with the simple modifications (see manuscript). The ddG dataset used is a multiple-point mutation dataset AB-bind (https://pubmed.ncbi.nlm.nih.gov/26473627/), which contains 1101 sample points related to the binding affinity change (i.e., ddG) caused by multiple-point AA mutations on the complex formed from antibody or antibody-like binding. We provide relevant files as follows:
    
-   1) https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing (original data for full-atom and MARTINI2)
+   1)  (original data for full-atom and MARTINI2)
    
 
    
