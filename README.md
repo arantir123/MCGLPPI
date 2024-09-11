@@ -130,6 +130,12 @@ __(3) ddG predictions based on the AB-bind dataset__
 2. We also provide the corresponding pickle file for a quick start:
 
    https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing (MARTINI2)
+
+3. Running examples:
+
+   __Example 1__ (in a WT protein-protein complex type-based fivefold CV setting, see https://academic.oup.com/bib/article/24/5/bbad310/7256145 for details, the splitting file is retrieved from https://github.com/arantir123/MpbPPI):
+
+   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml (MARTINI2)
    
 
    
