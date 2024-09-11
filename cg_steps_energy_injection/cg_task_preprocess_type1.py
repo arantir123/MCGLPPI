@@ -327,7 +327,7 @@ class CGDiff(tasks.Task, core.Configurable):
 
             return D_features
 
-        else:  # for the case that current angle information is not provided for current protein
+        else: # for the case that current angle information is not provided for current protein
             return torch.zeros([graph.num_node, 2]).to(self.device)
 
     def dihedral_generator(self, graph, angle_index, center_pos, eps=1e-7):
@@ -726,7 +726,7 @@ class CGDistancePrediction(tasks.Task, core.Configurable):
 
             return D_features
 
-        else:  # for the case that current angle information is not provided for current protein
+        else: # for the case that current angle information is not provided for current protein
             return torch.zeros([graph.num_node, 2]).to(self.device)
 
     def dihedral_generator(self, graph, angle_index, center_pos, eps=1e-7):
