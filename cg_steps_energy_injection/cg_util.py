@@ -19,7 +19,7 @@ def build_ppi_solver(cfg, train_set, valid_set, test_set, use_solver=False):
         cfg.optimizer.params = task.parameters()
         optimizer = core.Configurable.load_config_dict(cfg.optimizer)
 
-        # Need to define a solver for preprocessing
+        # need to define a solver for preprocessing
         solver = core.Engine(task, train_set, valid_set, test_set, optimizer, **cfg.engine)
     else:
         # the preprocess function is needed for the task wrapper if user_solver=False,
@@ -72,7 +72,7 @@ def build_ppi_solver_nograd(cfg, train_set, valid_set, test_set, use_solver=Fals
         cfg.optimizer.params = task.parameters()
         optimizer = core.Configurable.load_config_dict(cfg.optimizer)
 
-        # Need to define a solver for preprocessing
+        # need to define a solver for preprocessing
         solver = core.Engine(task, train_set, valid_set, test_set, optimizer, **cfg.engine)
     else:
         # the preprocess function is needed for the task wrapper if user_solver=False,
