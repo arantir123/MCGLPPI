@@ -151,7 +151,7 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 To be continued...
 
    
-## Quick start ##
+## Quick start 【太长不看版】 ##
 
 __We have provided:__ 
 
