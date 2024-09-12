@@ -33,15 +33,15 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
    
 2. The curated original dataset (including the full-atom PDB file and corresponding three CG geometric files for each sample point) are provided in:
 
-   https://drive.google.com/file/d/1nYPwkMhpIrTifOLWL-NDpyLOrnuzczjE/view?usp=sharing (for full-atom and MARTINI2)
+   https://drive.google.com/file/d/1nYPwkMhpIrTifOLWL-NDpyLOrnuzczjE/view?usp=sharing __(for full-atom and MARTINI2)__
 
-   https://drive.google.com/file/d/1S32LteGRSCCVPBM-Ig8MuVKibBMRqHiT/view?usp=sharing (for MARTINI3)
+   https://drive.google.com/file/d/1S32LteGRSCCVPBM-Ig8MuVKibBMRqHiT/view?usp=sharing __(for MARTINI3)__
 
    Please note that these zipped files contain 50,359 3DID (https://3did.irbbarcelona.org/) sample points covering 15,983 DDI structure templates. However, we remove any DDI templates from the 3DID dataset that are identical to those present in our downstream datasets, and 41,663 sample points are remained for the main experiments in the manuscript. Based on this, we further provide the parsed pickle file for these 41,663 sample points (in which the original sample point names are included) for a quick start:
 
-   https://drive.google.com/file/d/1FACIyhD-Jn1J6MpN7KuiU-uXo_gxgxh7/view?usp=sharing (for MARTINI2)
+   https://drive.google.com/file/d/1FACIyhD-Jn1J6MpN7KuiU-uXo_gxgxh7/view?usp=sharing __(for MARTINI2)__
 
-   https://drive.google.com/file/d/1ptIM69OkHzsP-fJtsUBF1HTBccM3Iv29/view?usp=sharing (for MARTINI3)
+   https://drive.google.com/file/d/1ptIM69OkHzsP-fJtsUBF1HTBccM3Iv29/view?usp=sharing __(for MARTINI3)__
 
 3. After preparing the parsed pickle file, we can run the corresponding scripts for MARTINI2 or MARTINI3 to pre-train the CG GearNet-Edge protein graph encoder (https://github.com/DeepGraphLearning/GearNet) for downstream use:
 
