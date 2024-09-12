@@ -165,25 +165,25 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
 __We have provided:__ 
 
-__(1) our pre-processed CG downstream source data pickle files for MCGLPPI (e.g., pickle file for the PDBbind strict dimer dataset),__
+__(1) our pre-processed CG downstream source data pickle files for using MCGLPPI quickly (e.g., pickle files for the PDBbind strict dimer dataset in above link),__
 
 __(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
 cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-__(3) corresponding running scripts (e.g., ones based on the PDBbind strict dimer dataset) for a quick start.__ 
+__(3) corresponding .yaml execution scripts (e.g., ones based on the PDBbind strict dimer dataset) for a quick start.__ 
 
-__Please follow the illustration in corresponding .yaml files (e.g., config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml) to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
+__Please follow the illustration in corresponding .yaml files (e.g., config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml) to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained CG graph encoder checkpoint).__
 
 __A running example (including the training and evaluation to create the evaluation results on the test set):__
 
 __After the environment configuration, usually dozens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
-python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
+python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml 
 
 (whether to use the pre-trained CG graph encoder checkpoint can be directly specified by the 'model_checkpoint' argument in above .yaml file, if not, excuating training-from-scratch)
 
-Please note that some of the used datasets are small due to the limitation of available complex structures, the evaluation results on these datasets could vary based on different hardwares and environments. Nevertheless, the better trade-off between computational overhead and biological plausible interaction descriptions can be guaranteed. Original experimental results are provided in the manuscript link.
+__Please note that some of the used data subsets are small due to the limitation of available complex structures and their experimental labels, the evaluation results on these subsets could vary based on different hardwares and environments. Nevertheless, the better trade-off between the computational overhead and biological-plausible interaction descriptions within complexes can be guaranteed. Please check the original manuscipt link for complete evaluation result reports.__
 
 # MCGLPPI++
 ### The demo code of implementation of MCGLPPI++
