@@ -155,9 +155,9 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
    __Example 1__ (in a conventional splitting where 80% MANY data points are training set and complete DC data points are test set):
 
-   python cg_steps/.py -c config/ppi_cg/.yaml (MARTINI2)
+   python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml (MARTINI2)
 
-   python cg3_steps/.py -c config/ppi_cg3/.yaml (MARTINI3)
+   python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml (MARTINI3)
  
 ## Quick start 【太长不看版】 ##
 
