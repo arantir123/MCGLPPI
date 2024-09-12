@@ -1,49 +1,41 @@
-# output_dir: F:/UOB/External Dataset/MANYDC/scratch/downstream_outputs
-output_dir: downstream_cgmodels/cg_MANYDC/
+# specify your model output location
+output_dir: MCGLPPI/downstream_files/MANYDC/scratch/downstream_outputs
 
 dataset:
   class: MANYDCDataset
 
   # the path for storing the downstream source data
-  # data_path: F:/UOB/External Dataset/MANYDC_source/manydc_data_full/
-  # data_path: F:/UOB/External Dataset/MANYDC_source/manydc_data_subset/
-  data_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/manydc/
+  data_path: MCGLPPI/downstream_files/MANYDC/m3_manydc_data_full/
 
-  # the path for storing the output processed pickle file
-  # output_path: F:/UOB/External Dataset/MANYDC_source/
-  output_path: /bask/projects/d/duanj-ai-imaging/yxy142_data/manydc/
+  # the path for storing the output processed (model input) pickle file
+  output_path: MCGLPPI/downstream_files/MANYDC/
 
   # the path for storing the index of dataset splitting
-  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff/downstream_files/MANYDC/MANYDC_index_seed512.json # MANYDC full set
-  # index_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff/downstream_files/MANYDC/MANYDC_atom_subset_index_seed512.json # MANYDC subset
-  # index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/MANYDC/MANYDC_index_seed512.json
-  index_path: /bask/homes/y/yxy142/cgdiff/downstream_files/MANYDC/MANYDC_atom_subset_index_seed512.json
+  index_path: MCGLPPI/downstream_files/MANYDC/MANYDC_index_seed512.json
 
-  # the path for storing all label informatipn of current dataset, should be complete to create complete label dict
-  # label_path: D:/PROJECT B2_5/code/raw code/CG Diffusion/cgdiff/downstream_files/MANYDC/MANYDC.csv
-  label_path: /bask/homes/y/yxy142/cgdiff/downstream_files/MANYDC/MANYDC.csv
+  # the path for storing all label informatipn of current dataset
+  label_path: MCGLPPI/downstream_files/MANYDC/MANYDC.csv
 
-  # indicating current used data source pickle file (creating it if it does not exist)
-  # pickle_name: cg3_manydc.pkl.gz
-  pickle_name: cg3_manydc_subset.pkl.gz
+  # indicating current used (model input) pickle file (creating it if it does not exist)
+  pickle_name: cg3_manydc.pkl.gz
 
   cropping_threshold: 10 # default: 10
   contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
-  # * currently no transform functions are needed, the node and edge features can be generated in task.forward and CG3_GraphConstruction separately *
+  # currently no transform functions are needed, the node and edge features can be generated in task.forward and CG22_GraphConstruction separately
 
 task:
   class: MANYDC
   angle_enhance: True
   # normalization: False # label normalization is closed for classification tasks
-
   num_mlp_layer: 3
-  mlp_batch_norm: False # default: False
-  mlp_dropout: 0 # default: 0
+  mlp_batch_norm: False
+  mlp_dropout: 0
 
   model:
     class: CG22_GearNetIEConv
     input_dim: 31 # bead type number (23) + 4*2 angle features (angle_enhance=True)
     # input_dim: 23 # bead type number
+    
     hidden_dims: [256, 256, 256, 256, 256, 256]
     batch_norm: True
     concat_hidden: True
@@ -81,35 +73,26 @@ optimizer:
   lr: 1.0e-4
 
 # scheduler:
-#   class: ReduceLROnPlateau
-#   mode: max
-#   factor: 0.6
-#   patience: 5
+  # class: ReduceLROnPlateau
+  # mode: max
+  # factor: 0.6
+  # patience: 5
 
 engine:
   gpus: [0]
-  batch_size: 64 # maximum = 128 on server
-  # new hyperparameter compared with pretraining phase
-  num_worker: 0 # default: 4 (not applicable in laptop)
+  batch_size: 16
+  num_worker: 0 
 
+# comment out the 'model_checkpoint' argument to enable training-from-scratch
 # model_checkpoint: {{ ckpt }}
-# model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
-model_checkpoint: /bask/homes/y/yxy142/cgdiff/pretrained_cgmodels/CGDiff/_3did/CG22_GearNetIEConv/martini3_cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_cg3_step2_1_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 train:
   model_save_mode: direct # direct/val, if set to direct (only save the model in the last specified epoch), early_stop will not work
-  num_epoch: 35
-  early_stop: 10 # default: 10/20
-
-  # * comment out the time limitation hyperparameters for comparing time used for CG-based models with models based on residue and atoms scales *
-  # * please note that these hyperparameters are only used for train/val/test sets during model training, the final independent test set is not influenced by these *
-  # train_time: 120
-  # val_time: 20
-  # test_time: 100
+  num_epoch: 30
+  early_stop: 20
 
   # the specified metric controlling the best model saved based on best-val
-  # eval_metric: auroc [interface_class]
   eval_metric: auprc [interface_class]
 
-# extra information attached to the saved model name
+# extra information to be attached to the name of the output model
 extra: 0
