@@ -57,11 +57,11 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
    
    2) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_2nd.yaml
 
-   We provide the pre-trained CG graph encoder (based on the aforementioned 41,663 MARTINI2 3DID subset) as an example (in pretrained_cgmodels, below is the checkpoint name):
+   __We provide the pre-trained CG graph encoder (based on the aforementioned 41,663 MARTINI2 3DID subset) as an example (in pretrained_cgmodels, below is the checkpoint name):__
 
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-   The below one is the encoder pre-trained on the further 33,144-sample subset described in the original manuscript:
+   __The below one is the encoder pre-trained on the further 33,144-sample subset described in the original manuscript:__
 
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
