@@ -5,7 +5,7 @@ dataset:
   class: MANYDCDataset
 
   # the path for storing the downstream source data
-  data_path: MCGLPPI/downstream_files/MANYDC/m2_manydc_data/
+  data_path: MCGLPPI/downstream_files/MANYDC/m2_manydc_data_full/
 
   # the path for storing the output processed (model input) pickle file
   output_path: MCGLPPI/downstream_files/MANYDC/
