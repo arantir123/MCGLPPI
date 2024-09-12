@@ -2,7 +2,8 @@
 ### Integration of molecular coarse-grained model into geometric representation learning framework for protein-protein complex property prediction 
 
 __The original bioRxiv version link: https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract__
-__The link for the accepted journal will be provided soon__
+
+__The link for the accepted journal will be provided soon.__
 
 __Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
 * Python 3.9.18
