@@ -65,7 +65,7 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-5. As a reference of the corresponding pre-training scripts in the original scales, we also clone the original ones in this repository (in Siamdiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
+5. As a reference of the corresponding pre-training scripts in the original scales, we also clone the original ones in this repository (in SiamDiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
    
 __Step3. Downstream complex overall property predictions based on w/ or w/o pre-trained CG graph encoder.__
 
