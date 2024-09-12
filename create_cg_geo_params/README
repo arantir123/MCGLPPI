@@ -1,0 +1,46 @@
+#!/bin/csh
+
+# To create a MARTINI coarse-grained structure and ITP (force field parameters) file, you can follow a detailed workflow based on the guidelines provided on the MARTINI website (https://cgmartini.nl/).
+# Below is a step-by-step guide to facilitate this process:
+
+# Download 1AK4.pdb from the Protein Data Bank. Before beginning the creation of a coarse-grained file, the first step is to clean and repair your atomistic PDB file. Remove water and other molecules typically used for crystallization. If there are missing residues or loops, complete the protein structure using your preferred modeling software (e.g., PDBFixer, Modeller, etc.). Since PDB structures may contain protein-protein interactions composed of identical chains, it is crucial to reduce redundancy and enhance efficiency by retaining only one set of interactions for analysis. In the structure 1AK4, chains A and B represent CYCLOPHILIN A, while chains C and D represent the HIV-1 CAPSID. The interaction between chain A and chain D is identical to that between chain B and chain C. Therefore, it is sufficient to maintain only one set of structural information, either chains A and D or chains B and C. In this case, we are preserving the interaction between chains B and C in 1AK4, and re-encoding these chains as A and B, respectively. For other proteins, please assess and retain the necessary interactions based on the actual situation.
+
+pdbname="1AK4.pdb"    # All-atom PDB file
+
+##########
+# MARTINI22 generation
+
+# Use martinize.py to convert your all-atom protein structure into a MARTINI coarse-grained model (cg_M2.pdb) and create force field parameter files (Protein_A.itp and Protein_B.itp) for chains A and B, respectively.
+python2 py/martini.py -f $pdbname -o cg_M2.top -x cg_M2.pdb -dssp dssp -p backbone -ff martini22
+	#-f 1AK4.pdb: Specifies your input PDB file.
+	#-o cg_M2.top: Specifies the output topology file.
+	#-x cg_M2.pdb: Specifies the output MARTINI22 coarse-grained PDB file.
+	#-dssp dssp: Path to the DSSP executable for determining secondary structures. 
+	#-ff martini22: Indicates the MARTINI2 force field version to use.
+	#Running this command will also generate two files, Protein_A.itp and Protein_B.itp, which correspond to the force field parameter files for chains A and B, respectively.
+
+# Convert the generated ITP files into a format that is compatible with our MCGLPPI model. 
+python py/itpconv.py Protein_A.itp > cg_A_M2.itp
+python py/itpconv.py Protein_B.itp > cg_B_M2.itp
+
+
+##########
+# MARTINI3 model generation
+
+# To generate a MARTINI3 topology, you must install martinize2. 
+# For installation instructions, please refer to https://github.com/marrink-lab/vermouth-martinize. 
+# The clean PDB structure can be used as input for martinize2 to generate both a coarse-grained structure and a Martini 3 topology file.
+martinize2 -f $pdbname -o cg_M3.top -x cg_M3.pdb -dssp dssp -p backbone -ff martini3001 
+	#-f 1AK4.pdb: Specifies your input PDB file.
+	#-o cg_M3.top: Specifies the output topology file.
+	#-x cg_M3.pdb: Specifies the output MARTINI3 coarse-grained PDB file.
+	#-dssp dssp: Path to the DSSP executable for determining secondary structures. 
+	#-ff martini3001: Indicates the MARTINI3 force field version to use.
+	#Running this command will also generate two files, molecule_0.itp and molecule_1.itp, which correspond to the force field parameter files for chains A and B, respectively.
+
+# Due to differences in the ITP file formats between MARTINI3 and MARTINI22, and given that the MCGLPPI model is designed to work with MARTINI22-based files, we will utilize m3_to_m2.py and itpconv.py to convert the files into a force field parameter file format readable by MCGLPPI.
+python py/m3_to_m2.py molecule_0.itp Protein_A.itp > molecule_0_M2.itp
+python py/m3_to_m2.py molecule_1.itp Protein_B.itp > molecule_1_M2.itp
+python py/itpconv.py molecule_0_M2.itp > cg_A_M3.itp
+python py/itpconv.py molecule_1_M2.itp > cg_B_M3.itp
+
