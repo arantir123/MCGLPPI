@@ -33,8 +33,7 @@ task:
   mlp_batch_norm: True
   mlp_dropout: 0.5
 
-  # * energy calculation hyper-parameters (only valid when energy_inject=True) *
-  # * the Lennard-Jones potential and Coulombic energy within the interface will be summarized *
+  # energy calculation hyper-parameters (only valid when energy_inject=True)
   energy_inject: False
   vdw_radius_coef: 0.2
   energy_shortcut: True # True: prediction = MLP(graph_emb) + MLP(energy), False: prediction = MLP(energy)
