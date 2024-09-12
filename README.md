@@ -171,11 +171,11 @@ cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did
 
 __(3) corresponding running scripts (e.g., ones based on the PDBbind strict dimer dataset) for a quick start.__ 
 
-__Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
+__Please follow the illustration in corresponding .yaml files (e.g., config/ppi_cg/cg2_pdbbind_gearnet_gbt.yaml) to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
 
 __A running example (including the training and evaluation to create the similar results reported):__
 
-__After the environment configuration, usually several hours are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
+__After the environment configuration, usually dozens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
 python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml  
 
