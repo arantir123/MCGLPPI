@@ -163,13 +163,13 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
 __We have provided:__ 
 
-__(1) our pre-processed CG downstream source data pickle files for MCGLPPI (e.g., ones in downstream_files/PDBBIND),__
+__(1) our pre-processed CG downstream source data pickle files for MCGLPPI (e.g., pickle file for the PDBbind strict dimer dataset),__
 
 __(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
 cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-__(3) corresponding running script demos (based on the PDBbind) for a quick start.__ 
+__(3) corresponding running scripts (e.g., ones based on the PDBbind strict dimer dataset) for a quick start.__ 
 
 __Please follow the illustration in config/ppi_cg/cg_pdbbind_gearnet_gbt.yaml to set the hyper-parameters for the downstream evaluation configurations (supporting both training-from-scratch or fine-tuning from the pre-trained checkpoint).__
 
