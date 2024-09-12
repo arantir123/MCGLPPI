@@ -146,11 +146,19 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
    2) https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing (original data for MARTINI3)
   
    3) MANYDC.csv in downstream_files/MANYDC/ (all binary classification labels for corresponding complex structures)
+  
+2. We also provide the corresponding pickle files for a quick start:
 
+   https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing (MARTINI2 and MARTINI3)
 
-To be continued...
+3. Running examples:
 
-   
+   __Example 1__ (in a conventional splitting where 80% MANY data points are training set and complete DC data points are test set):
+
+   python cg_steps/.py -c config/ppi_cg/.yaml (MARTINI2)
+
+   python cg3_steps/.py -c config/ppi_cg3/.yaml (MARTINI3)
+ 
 ## Quick start 【太长不看版】 ##
 
 __We have provided:__ 
