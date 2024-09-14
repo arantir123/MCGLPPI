@@ -1,0 +1,147 @@
+; MARTINI (martini22) Coarse Grained topology file for "Protein_C"
+; Created by py version 2.4 
+; Using the following options:  -f 4P2Q.pdb -o cg.top -x cg.pdb -dssp py/dssp -p backbone -ff martini22
+; Sequence:
+; ADGLAYFRSSFKGG
+; Secondary Structure:
+; CCCCCCCCCCCCCC
+
+[ moleculetype ]
+; Name         Exclusions
+Protein_C         1
+
+[ atoms ]
+    1    Qd     1   ALA    BB     1  1.0000 ; C
+    2    P5     2   ASP    BB     2  0.0000 ; C
+    3    Qa     2   ASP   SC1     3 -1.0000 ; C
+    4    P5     3   GLY    BB     4  0.0000 ; C
+    5    P5     4   LEU    BB     5  0.0000 ; C
+    6   AC1     4   LEU   SC1     6  0.0000 ; C
+    7    P4     5   ALA    BB     7  0.0000 ; C
+    8    P5     6   TYR    BB     8  0.0000 ; C
+    9   SC4     6   TYR   SC1     9  0.0000 ; C
+   10   SC4     6   TYR   SC2    10  0.0000 ; C
+   11   SP1     6   TYR   SC3    11  0.0000 ; C
+   12    P5     7   PHE    BB    12  0.0000 ; C
+   13   SC5     7   PHE   SC1    13  0.0000 ; C
+   14   SC5     7   PHE   SC2    14  0.0000 ; C
+   15   SC5     7   PHE   SC3    15  0.0000 ; C
+   16    P5     8   ARG    BB    16  0.0000 ; C
+   17    N0     8   ARG   SC1    17  0.0000 ; C
+   18    Qd     8   ARG   SC2    18  1.0000 ; C
+   19    P5     9   SER    BB    19  0.0000 ; C
+   20    P1     9   SER   SC1    20  0.0000 ; C
+   21    P5    10   SER    BB    21  0.0000 ; C
+   22    P1    10   SER   SC1    22  0.0000 ; C
+   23    P5    11   PHE    BB    23  0.0000 ; C
+   24   SC5    11   PHE   SC1    24  0.0000 ; C
+   25   SC5    11   PHE   SC2    25  0.0000 ; C
+   26   SC5    11   PHE   SC3    26  0.0000 ; C
+   27    P5    12   LYS    BB    27  0.0000 ; C
+   28    C3    12   LYS   SC1    28  0.0000 ; C
+   29    Qd    12   LYS   SC2    29  1.0000 ; C
+   30    P5    13   GLY    BB    30  0.0000 ; C
+   31    Qa    14   GLY    BB    31 -1.0000 ; C
+
+[ bonds ]
+; Backbone bonds
+    1     2      1   0.35000  1250 ; ALA(C)-ASP(C)
+    2     4      1   0.35000  1250 ; ASP(C)-GLY(C)
+    4     5      1   0.35000  1250 ; GLY(C)-LEU(C)
+    5     7      1   0.35000  1250 ; LEU(C)-ALA(C)
+    7     8      1   0.35000  1250 ; ALA(C)-TYR(C)
+    8    12      1   0.35000  1250 ; TYR(C)-PHE(C)
+   12    16      1   0.35000  1250 ; PHE(C)-ARG(C)
+   16    19      1   0.35000  1250 ; ARG(C)-SER(C)
+   19    21      1   0.35000  1250 ; SER(C)-SER(C)
+   21    23      1   0.35000  1250 ; SER(C)-PHE(C)
+   23    27      1   0.35000  1250 ; PHE(C)-LYS(C)
+   27    30      1   0.35000  1250 ; LYS(C)-GLY(C)
+   30    31      1   0.35000  1250 ; GLY(C)-GLY(C)
+; Sidechain bonds
+    2     3      1   0.32000  7500 ; ASP
+    5     6      1   0.33000  7500 ; LEU
+    8     9      1   0.32000  5000 ; TYR
+   12    13      1   0.31000  7500 ; PHE
+   16    17      1   0.33000  5000 ; ARG
+   17    18      1   0.34000  5000 ; ARG
+   19    20      1   0.25000  7500 ; SER
+   21    22      1   0.25000  7500 ; SER
+   23    24      1   0.31000  7500 ; PHE
+   27    28      1   0.33000  5000 ; LYS
+   28    29      1   0.28000  5000 ; LYS
+; Short elastic bonds for extended regions
+; Long elastic bonds for extended regions
+
+[ constraints ]
+    9    10      1   0.27000 ; TYR
+    9    11      1   0.27000 ; TYR
+   10    11      1   0.27000 ; TYR
+   13    14      1   0.27000 ; PHE
+   13    15      1   0.27000 ; PHE
+   14    15      1   0.27000 ; PHE
+   24    25      1   0.27000 ; PHE
+   24    26      1   0.27000 ; PHE
+   25    26      1   0.27000 ; PHE
+
+[ angles ]
+; Backbone angles
+    1     2     4      2    127    20 ; ALA(C)-ASP(C)-GLY(C)
+    2     4     5      2    127    20 ; ASP(C)-GLY(C)-LEU(C)
+    4     5     7      2    127    20 ; GLY(C)-LEU(C)-ALA(C)
+    5     7     8      2    127    20 ; LEU(C)-ALA(C)-TYR(C)
+    7     8    12      2    127    20 ; ALA(C)-TYR(C)-PHE(C)
+    8    12    16      2    127    20 ; TYR(C)-PHE(C)-ARG(C)
+   12    16    19      2    127    20 ; PHE(C)-ARG(C)-SER(C)
+   16    19    21      2    127    20 ; ARG(C)-SER(C)-SER(C)
+   19    21    23      2    127    20 ; SER(C)-SER(C)-PHE(C)
+   21    23    27      2    127    20 ; SER(C)-PHE(C)-LYS(C)
+   23    27    30      2    127    20 ; PHE(C)-LYS(C)-GLY(C)
+   27    30    31      2    127    20 ; LYS(C)-GLY(C)-GLY(C)
+; Backbone-sidechain angles
+    1     2     3      2    100    25 ; ALA(C)-ASP(C) SBB
+    4     5     6      2    100    25 ; GLY(C)-LEU(C) SBB
+    7     8     9      2    100    25 ; ALA(C)-TYR(C) SBB
+    8    12    13      2    100    25 ; TYR(C)-PHE(C) SBB
+   12    16    17      2    100    25 ; PHE(C)-ARG(C) SBB
+   16    19    20      2    100    25 ; ARG(C)-SER(C) SBB
+   19    21    22      2    100    25 ; SER(C)-SER(C) SBB
+   21    23    24      2    100    25 ; SER(C)-PHE(C) SBB
+   23    27    28      2    100    25 ; PHE(C)-LYS(C) SBB
+; Sidechain angles
+    8     9    10      2    150    50 ; TYR
+    8     9    11      2    150    50 ; TYR
+   12    13    14      2    150    50 ; PHE
+   12    13    15      2    150    50 ; PHE
+   16    17    18      2    180    25 ; ARG
+   23    24    25      2    150    50 ; PHE
+   23    24    26      2    150    50 ; PHE
+   27    28    29      2    180    25 ; LYS
+
+[ dihedrals ]
+; Backbone dihedrals
+; Sidechain improper dihedrals
+    8    10    11     9      2      0    50 ; TYR
+   12    14    15    13      2      0    50 ; PHE
+   23    25    26    24      2      0    50 ; PHE
+
+#ifdef POSRES
+#ifndef POSRES_FC
+#define POSRES_FC 1000.00
+#endif
+ [ position_restraints ]
+      1    1    POSRES_FC    POSRES_FC    POSRES_FC
+      2    1    POSRES_FC    POSRES_FC    POSRES_FC
+      4    1    POSRES_FC    POSRES_FC    POSRES_FC
+      5    1    POSRES_FC    POSRES_FC    POSRES_FC
+      7    1    POSRES_FC    POSRES_FC    POSRES_FC
+      8    1    POSRES_FC    POSRES_FC    POSRES_FC
+     12    1    POSRES_FC    POSRES_FC    POSRES_FC
+     16    1    POSRES_FC    POSRES_FC    POSRES_FC
+     19    1    POSRES_FC    POSRES_FC    POSRES_FC
+     21    1    POSRES_FC    POSRES_FC    POSRES_FC
+     23    1    POSRES_FC    POSRES_FC    POSRES_FC
+     27    1    POSRES_FC    POSRES_FC    POSRES_FC
+     30    1    POSRES_FC    POSRES_FC    POSRES_FC
+     31    1    POSRES_FC    POSRES_FC    POSRES_FC
+#endif

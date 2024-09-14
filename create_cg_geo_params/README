@@ -12,12 +12,12 @@ pdbname="1AK4.pdb"    # All-atom PDB file
 
 # Use martinize.py to convert your all-atom protein structure into a MARTINI coarse-grained model (cg_M2.pdb) and create force field parameter files (Protein_A.itp and Protein_B.itp) for chains A and B, respectively.
 python2 py/martini.py -f $pdbname -o cg_M2.top -x cg_M2.pdb -dssp dssp -p backbone -ff martini22
-	#-f 1AK4.pdb: Specifies your input PDB file.
-	#-o cg_M2.top: Specifies the output topology file.
-	#-x cg_M2.pdb: Specifies the output MARTINI22 coarse-grained PDB file.
-	#-dssp dssp: Path to the DSSP executable for determining secondary structures. 
-	#-ff martini22: Indicates the MARTINI2 force field version to use.
-	#Running this command will also generate two files, Protein_A.itp and Protein_B.itp, which correspond to the force field parameter files for chains A and B, respectively.
+    # -f 1AK4.pdb: Specifies your input PDB file.
+    # -o cg_M2.top: Specifies the output topology file.
+    # -x cg_M2.pdb: Specifies the output MARTINI22 coarse-grained PDB file.
+    # -dssp dssp: Path to the DSSP executable for determining secondary structures. 
+    # -ff martini22: Indicates the MARTINI2 force field version to use.
+    # Running this command will also generate two files, Protein_A.itp and Protein_B.itp, which correspond to the force field parameter files for chains A and B, respectively.
 
 # Convert the generated ITP files into a format that is compatible with our MCGLPPI model. 
 python py/itpconv.py Protein_A.itp > cg_A_M2.itp
@@ -31,16 +31,29 @@ python py/itpconv.py Protein_B.itp > cg_B_M2.itp
 # For installation instructions, please refer to https://github.com/marrink-lab/vermouth-martinize. 
 # The clean PDB structure can be used as input for martinize2 to generate both a coarse-grained structure and a Martini 3 topology file.
 martinize2 -f $pdbname -o cg_M3.top -x cg_M3.pdb -dssp dssp -p backbone -ff martini3001 
-	#-f 1AK4.pdb: Specifies your input PDB file.
-	#-o cg_M3.top: Specifies the output topology file.
-	#-x cg_M3.pdb: Specifies the output MARTINI3 coarse-grained PDB file.
-	#-dssp dssp: Path to the DSSP executable for determining secondary structures. 
-	#-ff martini3001: Indicates the MARTINI3 force field version to use.
-	#Running this command will also generate two files, molecule_0.itp and molecule_1.itp, which correspond to the force field parameter files for chains A and B, respectively.
+    # -f 1AK4.pdb: Specifies your input PDB file.
+    # -o cg_M3.top: Specifies the output topology file.
+    # -x cg_M3.pdb: Specifies the output MARTINI3 coarse-grained PDB file.	
+    # -dssp dssp: Path to the DSSP executable for determining secondary structures. 
+    # -ff martini3001: Indicates the MARTINI3 force field version to use.
+    # Running this command will also generate two files, molecule_0.itp and molecule_1.itp, which correspond to the force field parameter files for chains A and B, respectively.
 
 # Due to differences in the ITP file formats between MARTINI3 and MARTINI22, and given that the MCGLPPI model is designed to work with MARTINI22-based files, we will utilize m3_to_m2.py and itpconv.py to convert the files into a force field parameter file format readable by MCGLPPI.
 python py/m3_to_m2.py molecule_0.itp Protein_A.itp > molecule_0_M2.itp
 python py/m3_to_m2.py molecule_1.itp Protein_B.itp > molecule_1_M2.itp
 python py/itpconv.py molecule_0_M2.itp > cg_A_M3.itp
 python py/itpconv.py molecule_1_M2.itp > cg_B_M3.itp
+
+
+#######
+#It is important to note that our MCGLPPI model is specifically designed for studying dimeric protein-protein interactions. The model exclusively requires the coarse-grained structure files (cg.pdb) and the force field parameter files (cg_A.itp and cg_B.itp) for proteins A and B. In cases where a protein in the PDB is composed of multiple chains, these multiple chains must be consolidated into a single .itp file. For instance, in the TCR-pMHC complex (PDB ID: 4P2Q), the pMHC is made up of MHC (chains A and B) and a peptide (chain C), while the TCR includes the T-cell receptor alpha chain (chain D) and beta chain (chain E). Running a command like martini.py (or martinize2) will generate five .itp files--Protein_A.itp, Protein_B.itp, Protein_C.itp, Protein_D.itp, and Protein_E.p--corresponding to chains A, B, C, D, and E, respectively.
+# To manage these force field parameter files, we use itpconv.py to consolidate the files for the peptide (Protein_C.itp) and MHC (Protein_A.itp and Protein_B.itp) into one for the pMHC, named cg_A.itp. Similarly, the parameter files for the T-cell receptor alpha (Protein_D.itp) and beta chains (Protein_E.itp) are combined into a single parameter file for the TCR, named cg_B.itp.
+
+pdbname="4P2Q.pdb"
+python2 py/martini.py -f $pdbname -o cg.top -x cg.pdb -dssp dssp -p backbone -ff martini22
+python py/itpconv.py Protein_A.itp Protein_B.itp Protein_C.itp > cg_A.itp
+python py/itpconv.py Protein_D.itp Protein_E.itp > cg_B.itp
+
+# Additionally, to ensure that the MCGLPPI model correctly identifies the coarse-grained structures of proteins A (pMHC) and B (TCR), it is necessary to rename chains A, B, and C of the cg.pdb file to 'A' (pMHC), and chains D and E to 'B' (TCR). This renaming facilitates the model's ability to accurately recognize and process the designated protein interactions.
+# For other protein complexes, merge them based on the actual composition of the protein complex structure.
 
