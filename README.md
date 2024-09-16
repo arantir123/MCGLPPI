@@ -175,9 +175,11 @@ __(3) ddG predictions based on the AB-bind dataset__
 
 3. Running example:
 
-   __Example 1__
+   __Example 1__ (in a WT protein-protein complex type-based fivefold CV setting,
 
-   (in a WT protein-protein complex type-based fivefold CV setting, see https://academic.oup.com/bib/article/24/5/bbad310/7256145 for details, the splitting file is retrieved from https://github.com/arantir123/MpbPPI):
+   see https://academic.oup.com/bib/article/24/5/bbad310/7256145 for details,
+
+   the splitting file is retrieved from https://github.com/arantir123/MpbPPI):
 
    __MARTINI2:__
 
