@@ -33,21 +33,21 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
    
 2. The curated original dataset (including the full-atom PDB file and corresponding three CG geometric files for each sample point) are provided in:
    
-   __for full-atom and MARTINI2:__
+   __For full-atom and MARTINI2:__
 
    https://drive.google.com/file/d/1nYPwkMhpIrTifOLWL-NDpyLOrnuzczjE/view?usp=sharing
 
-   __for MARTINI3__:
+   __For MARTINI3__:
 
    https://drive.google.com/file/d/1S32LteGRSCCVPBM-Ig8MuVKibBMRqHiT/view?usp=sharing 
 
    Please note that these zipped files contain 50,359 3DID (https://3did.irbbarcelona.org/) sample points covering 15,983 DDI structure templates. However, we remove any DDI templates from the 3DID dataset that are identical to those present in our downstream datasets, and 41,663 sample points are remained for the main experiments in the manuscript. Based on this, we further provide the parsed pickle file for these 41,663 sample points (in which the original sample point names are included) for a quick start:
 
-   __for MARTINI2:__
+   __For MARTINI2:__
 
    https://drive.google.com/file/d/1FACIyhD-Jn1J6MpN7KuiU-uXo_gxgxh7/view?usp=sharing
 
-   __for MARTINI3:__
+   __For MARTINI3:__
 
    https://drive.google.com/file/d/1ptIM69OkHzsP-fJtsUBF1HTBccM3Iv29/view?usp=sharing 
 
@@ -81,15 +81,15 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
 1. This dataset only contains the strict dimer complexes curated from the PDBbind v2020 database (http://www.pdbbind.org.cn/download/pdbbind_2020_intro.pdf). We provide relevant files as follows:
    
-   1) __original data for full-atom and MARTINI2:__
+   1) __Original data for full-atom and MARTINI2:__
       
       https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing
 
-   2) __original data for MARTINI3:__
+   2) __Original data for MARTINI3:__
 
       https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing 
 
-   3) __all dG labels for corresponding complex structures:__
+   3) __All dG labels for corresponding complex structures:__
      
       PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ path 
 
@@ -127,37 +127,47 @@ __(2) dG predictions based on the ATLAS dataset__
 
 2. We provide the relevant original data as follows:
 
-   1) __original data for full-atom and MARTINI2:__
+   1) __Original data for full-atom and MARTINI2:__
       
       https://drive.google.com/file/d/1SA7fXpbF2r6co7KkPxn0LSeCe_Noau-J/view?usp=sharing 
 
-   2) __original data for MARTINI3:__
+   2) __Original data for MARTINI3:__
 
      https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing 
   
-   3) __all dG labels for corresponding complex structures:__
+   3) __All dG labels for corresponding complex structures:__
 
      ATLAS.csv in downstream_files/ATLAS/ 
 
 3. We also provide the corresponding pickle files for a quick start:
 
-   https://drive.google.com/file/d/1dWUoIPK_F4C_hKY5cG5aM1cQJS13azuv/view?usp=sharing __(MARTINI2 and MARTINI3)__
+   __MARTINI2 and MARTINI3:__
 
-4. Running examples:
+   https://drive.google.com/file/d/1dWUoIPK_F4C_hKY5cG5aM1cQJS13azuv/view?usp=sharing 
+
+5. Running examples:
 
    __Example 1__ (in a standard tenfold cross-validation (CV) setting):
 
-   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml __(MARTINI2)__
+   __MARTINI2:__
 
-   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt_10CV.yaml __(MARTINI3)__
+   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml
+
+   __MARTINI3:__ 
+
+   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt_10CV.yaml 
 
 __(3) ddG predictions based on the AB-bind dataset__
 
 1. We demonstrate the potential of MCGLPPI on the extension into directly predicting ddG with the simple modifications (see manuscript for processing details). The ddG dataset used is a multiple-point mutation dataset AB-bind (https://pubmed.ncbi.nlm.nih.gov/26473627/), which contains 1101 sample points related to the binding affinity change (i.e., ddG) caused by multiple-point amino acid (AA) mutations on the complex formed from antibody or antibody-like binding. We provide relevant files as follows:
    
-   1) https://drive.google.com/file/d/1vxGXXhtYJw_QmZi9PBjNH8U-AwYsAj5L/view?usp=sharing __(original data for full-atom and MARTINI2)__
+   1) __Original data for full-atom and MARTINI2:__
 
-   2) M1101_label.csv in downstream_files/M1101/ __(all ddG labels for corresponding wild-type (WT) - mutant (MT) complex structure pairs)__
+      https://drive.google.com/file/d/1vxGXXhtYJw_QmZi9PBjNH8U-AwYsAj5L/view?usp=sharing 
+
+   2) __All ddG labels for corresponding wild-type (WT) - mutant (MT) complex structure pairs:__
+
+      M1101_label.csv in downstream_files/M1101/ 
   
 2. We also provide the corresponding pickle file for a quick start:
 
@@ -167,17 +177,25 @@ __(3) ddG predictions based on the AB-bind dataset__
 
    __Example 1__ (in a WT protein-protein complex type-based fivefold CV setting, see https://academic.oup.com/bib/article/24/5/bbad310/7256145 for details, the splitting file is retrieved from https://github.com/arantir123/MpbPPI):
 
-   python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml __(MARTINI2)__
+   __MARTINI2:__
+
+   python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml 
    
 __(4) Protein-protein complex interface classifications based on the MANY/DC dataset__ 
 
 1. This dataset is used to examine the model's ability to distinguish/classify the biological interface from crystal artefacts (https://www.nature.com/articles/s41467-021-27396-0). We provide relevant files as follows:
    
-   1) https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing __(original data for full-atom and MARTINI2)__
+   1) __Original data for full-atom and MARTINI2:__
+     
+      https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing 
 
-   2) https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing __(original data for MARTINI3)__
+   2) __Original data for MARTINI3:__
+   
+      https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing 
   
-   3) MANYDC.csv in downstream_files/MANYDC/ __(all binary classification labels for corresponding complex structures)__
+   3) __All binary classification labels for corresponding complex structures:__
+
+     MANYDC.csv in downstream_files/MANYDC/ 
   
 2. We also provide the corresponding pickle files for a quick start:
 
@@ -187,9 +205,13 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
    __Example 1__ (in a conventional splitting where 80% MANY data points are selected as training set and complete DC data points are test set):
 
-   python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml __(MARTINI2)__
+   __MARTINI2:__
 
-   python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml __(MARTINI3)__
+   python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml
+
+   __MARTINI3:__
+
+   python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml 
  
 ## Quick start 【太长不看版】 ##
 
