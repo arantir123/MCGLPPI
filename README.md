@@ -111,9 +111,9 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
          python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml 
 
-   __Example 2__ (in a stricter overall TM-score-based splitting
+   __Example 2__
 
-   [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
+   (in a stricter overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
 
    __MARTINI2:__
 
