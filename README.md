@@ -55,23 +55,23 @@ __Step2. CG diffusion-based pre-training using domain-domain interaction (DDI) t
 
    __MARTINI2 (run 1st and then run 2nd):__
 
-   1) python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_1st.yaml
+         python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_1st.yaml
    
-   2) python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_2nd.yaml
+         python cg_steps/cg_pretrain.py -c config/ppi_cg/cgdiff_2nd.yaml
 
    __MARTINI3 (run 1st and then run 2nd):__
 
-   1) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_1st.yaml
+         python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_1st.yaml
    
-   2) python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_2nd.yaml
+         python cg3_steps/cg3_pretrain.py -c config/ppi_cg3/cg3diff_2nd.yaml
 
    __We provide the pre-trained CG graph encoder (based on the aforementioned 41,663 MARTINI2 3DID subset) as an example (in pretrained_cgmodels, below is the checkpoint name):__
 
-   cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+         cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
    __The below one is the encoder pre-trained on the further 33,144-sample subset described in the original manuscript:__
 
-   cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
+         cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_lss3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 5. As a reference of the corresponding pre-training scripts in the original scales, we also clone the original ones in this repository (in SiamDiff, original link: https://github.com/DeepGraphLearning/SiamDiff/tree/main).
    
@@ -83,15 +83,15 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
    
    1) __Original data for full-atom and MARTINI2:__
       
-      https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing
+         https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing
 
    2) __Original data for MARTINI3:__
 
-      https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing 
+         https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing 
 
    3) __All dG labels for corresponding complex structures:__
      
-      PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ path 
+         PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ path 
 
 1. We also provide the corresponding pickle files for a quick start:
 
