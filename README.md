@@ -129,15 +129,15 @@ __(2) dG predictions based on the ATLAS dataset__
 
    1) __Original data for full-atom and MARTINI2:__
       
-         https://drive.google.com/file/d/1SA7fXpbF2r6co7KkPxn0LSeCe_Noau-J/view?usp=sharing 
+            https://drive.google.com/file/d/1SA7fXpbF2r6co7KkPxn0LSeCe_Noau-J/view?usp=sharing 
 
    2) __Original data for MARTINI3:__
 
-        https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing 
+           https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing 
   
    3) __All dG labels for corresponding complex structures:__
 
-        ATLAS.csv in downstream_files/ATLAS/ 
+           ATLAS.csv in downstream_files/ATLAS/ 
 
 3. We also provide the corresponding pickle files for a quick start:
 
