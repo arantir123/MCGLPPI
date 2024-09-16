@@ -163,15 +163,15 @@ __(3) ddG predictions based on the AB-bind dataset__
    
    1) __Original data for full-atom and MARTINI2:__
 
-         https://drive.google.com/file/d/1vxGXXhtYJw_QmZi9PBjNH8U-AwYsAj5L/view?usp=sharing 
+            https://drive.google.com/file/d/1vxGXXhtYJw_QmZi9PBjNH8U-AwYsAj5L/view?usp=sharing 
 
    2) __All ddG labels for corresponding wild-type (WT) - mutant (MT) complex structure pairs:__
 
-         M1101_label.csv in downstream_files/M1101/ 
+            M1101_label.csv in downstream_files/M1101/ 
   
 2. We also provide the corresponding pickle file for a quick start:
 
-      https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing __(MARTINI2)__
+         https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing __(MARTINI2)__
 
 3. Running example:
 
@@ -183,7 +183,7 @@ __(3) ddG predictions based on the AB-bind dataset__
 
    __MARTINI2:__
 
-      python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml 
+         python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml 
    
 __(4) Protein-protein complex interface classifications based on the MANY/DC dataset__ 
 
@@ -199,11 +199,11 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
   
    3) __All binary classification labels for corresponding complex structures:__
 
-        MANYDC.csv in downstream_files/MANYDC/ 
+         MANYDC.csv in downstream_files/MANYDC/ 
   
 2. We also provide the corresponding pickle files for a quick start:
 
-      https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing __(MARTINI2 and MARTINI3)__
+         https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing __(MARTINI2 and MARTINI3)__
 
 3. Running examples:
 
@@ -211,11 +211,11 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
    __MARTINI2:__
 
-      python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml
+         python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml
 
    __MARTINI3:__
 
-      python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml 
+         python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml 
  
 ## Quick start 【太长不看版】 ##
 
