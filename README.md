@@ -191,15 +191,15 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
    
    1) __Original data for full-atom and MARTINI2:__
      
-         https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing 
+            https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing 
 
    2) __Original data for MARTINI3:__
    
-         https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing 
+            https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing 
   
    3) __All binary classification labels for corresponding complex structures:__
 
-         MANYDC.csv in downstream_files/MANYDC/ 
+            MANYDC.csv in downstream_files/MANYDC/ 
   
 2. We also provide the corresponding pickle files for a quick start:
 
