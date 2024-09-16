@@ -183,7 +183,7 @@ python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearn
 
 (whether to use the pre-trained CG graph encoder checkpoint can be directly specified by the 'model_checkpoint' argument in above .yaml file, if not, excuating training-from-scratch)
 
-__Please note that some of the used data subsets are small due to the limitation of available complex structures and their experimental labels, the evaluation results on these subsets could vary based on different hardwares and environments. Nevertheless, the better trade-off between the computational overhead and chemical-plausible interaction descriptions within complexes can be guaranteed. Please check the original manuscipt link for complete evaluation result reports.__
+__Please note that some of the used data subsets are small due to the limitation of available complex structures and their experimental labels, the evaluation results on these subsets might vary based on different hardwares and environments. Nevertheless, the better trade-off between the computational overhead and chemical-plausible interaction descriptions within complexes can be guaranteed. Please check the original manuscipt link for complete evaluation result reports.__
 
 # MCGLPPI++
 ### The demo code of implementation of MCGLPPI++
