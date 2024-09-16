@@ -121,7 +121,7 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
     __MARTINI3:__
 
-   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_TMscore.yaml
+         python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_TMscore.yaml
 
 __(2) dG predictions based on the ATLAS dataset__
 
