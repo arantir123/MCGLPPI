@@ -111,9 +111,7 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
          python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml 
 
-   __Example 2__
-
-   (in a stricter overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
+   __Example 2__ (in an overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
 
    __MARTINI2:__
 
@@ -131,21 +129,21 @@ __(2) dG predictions based on the ATLAS dataset__
 
    1) __Original data for full-atom and MARTINI2:__
       
-      https://drive.google.com/file/d/1SA7fXpbF2r6co7KkPxn0LSeCe_Noau-J/view?usp=sharing 
+         https://drive.google.com/file/d/1SA7fXpbF2r6co7KkPxn0LSeCe_Noau-J/view?usp=sharing 
 
    2) __Original data for MARTINI3:__
 
-     https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing 
+        https://drive.google.com/file/d/1nai954uqdn47ZlOI5l_wfguIGgX3l4IA/view?usp=sharing 
   
    3) __All dG labels for corresponding complex structures:__
 
-     ATLAS.csv in downstream_files/ATLAS/ 
+        ATLAS.csv in downstream_files/ATLAS/ 
 
 3. We also provide the corresponding pickle files for a quick start:
 
    __MARTINI2 and MARTINI3:__
 
-   https://drive.google.com/file/d/1dWUoIPK_F4C_hKY5cG5aM1cQJS13azuv/view?usp=sharing 
+         https://drive.google.com/file/d/1dWUoIPK_F4C_hKY5cG5aM1cQJS13azuv/view?usp=sharing 
 
 5. Running examples:
 
@@ -153,11 +151,11 @@ __(2) dG predictions based on the ATLAS dataset__
 
    __MARTINI2:__
 
-   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml
+         python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_atlas_gearnet_gbt_10CV.yaml
 
    __MARTINI3:__ 
 
-   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt_10CV.yaml 
+         python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_atlas_gearnet_gbt_10CV.yaml 
 
 __(3) ddG predictions based on the AB-bind dataset__
 
@@ -165,15 +163,15 @@ __(3) ddG predictions based on the AB-bind dataset__
    
    1) __Original data for full-atom and MARTINI2:__
 
-      https://drive.google.com/file/d/1vxGXXhtYJw_QmZi9PBjNH8U-AwYsAj5L/view?usp=sharing 
+         https://drive.google.com/file/d/1vxGXXhtYJw_QmZi9PBjNH8U-AwYsAj5L/view?usp=sharing 
 
    2) __All ddG labels for corresponding wild-type (WT) - mutant (MT) complex structure pairs:__
 
-      M1101_label.csv in downstream_files/M1101/ 
+         M1101_label.csv in downstream_files/M1101/ 
   
 2. We also provide the corresponding pickle file for a quick start:
 
-   https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing __(MARTINI2)__
+      https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing __(MARTINI2)__
 
 3. Running example:
 
@@ -185,7 +183,7 @@ __(3) ddG predictions based on the AB-bind dataset__
 
    __MARTINI2:__
 
-   python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml 
+      python cg_steps_energy_injection/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_m1101_gearnet_gbt_WTtype.yaml 
    
 __(4) Protein-protein complex interface classifications based on the MANY/DC dataset__ 
 
@@ -193,19 +191,19 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
    
    1) __Original data for full-atom and MARTINI2:__
      
-      https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing 
+         https://drive.google.com/file/d/18oEzeiqKT7tf7f9krFxCQ8QP-o8lLwar/view?usp=sharing 
 
    2) __Original data for MARTINI3:__
    
-      https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing 
+         https://drive.google.com/file/d/19R6QQiT2NDC94Pv15pgolm_-cLfUXryy/view?usp=sharing 
   
    3) __All binary classification labels for corresponding complex structures:__
 
-     MANYDC.csv in downstream_files/MANYDC/ 
+        MANYDC.csv in downstream_files/MANYDC/ 
   
 2. We also provide the corresponding pickle files for a quick start:
 
-   https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing __(MARTINI2 and MARTINI3)__
+      https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing __(MARTINI2 and MARTINI3)__
 
 3. Running examples:
 
@@ -213,11 +211,11 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
 
    __MARTINI2:__
 
-   python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml
+      python cg_steps/cg_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg/cg_manydc_gearnet_DCtest.yaml
 
    __MARTINI3:__
 
-   python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml 
+      python cg3_steps/cg3_downstream_1gpu_GBT_stats_cal.py -c config/ppi_cg3/cg3_manydc_gearnet_DCtest.yaml 
  
 ## Quick start 【太长不看版】 ##
 
@@ -227,7 +225,7 @@ __(1) our pre-processed CG downstream source data pickle files for using MCGLPPI
 
 __(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
-cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
+      cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 __(3) corresponding .yaml execution scripts (e.g., ones based on the PDBbind strict dimer dataset) for a quick start.__ 
 
@@ -237,7 +235,7 @@ __A running example (including the training and evaluation to create the evaluat
 
 __After the environment configuration, usually dozens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
-python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml 
+      python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml 
 
 (whether to use the pre-trained CG graph encoder checkpoint can be directly specified by the 'model_checkpoint' argument in above .yaml file, if not, excuating training-from-scratch)
 
@@ -260,11 +258,11 @@ __We have provided:__
 
 __(1) our pre-processed CG source data pickle file (in the following link),__
 
-https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
+      https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
 __(2) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
-cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
+      cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 
 __(3) corresponding running script demos for a quick start.__ 
 
@@ -274,7 +272,7 @@ __A running example:__
 
 __After the environment configuration, usually dozens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
-python cg_maml_steps/cg_downstream_1gpu_maml_reg.py -c config/ppi_cg_maml/cg_maml_gearnet_reg.yaml  
+      python cg_maml_steps/cg_downstream_1gpu_maml_reg.py -c config/ppi_cg_maml/cg_maml_gearnet_reg.yaml  
 
 __The complete MCGLPPI++ framework, including complete original data and implementation scripts, will be released upon acceptance.__
 
