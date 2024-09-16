@@ -171,9 +171,11 @@ __(3) ddG predictions based on the AB-bind dataset__
   
 2. We also provide the corresponding pickle file for a quick start:
 
-         https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing __(MARTINI2)__
+   __MARTINI2:__
 
-3. Running example:
+         https://drive.google.com/file/d/1LgR-CD7H4pUTXlWAcZ3kNzv9r05DVJwe/view?usp=sharing 
+
+4. Running example:
 
    __Example 1__ (in a WT protein-protein complex type-based fivefold CV setting,
 
@@ -203,9 +205,11 @@ __(4) Protein-protein complex interface classifications based on the MANY/DC dat
   
 2. We also provide the corresponding pickle files for a quick start:
 
-         https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing __(MARTINI2 and MARTINI3)__
+   __MARTINI2 and MARTINI3:__
 
-3. Running examples:
+         https://drive.google.com/file/d/1DiS9WX8zqKTWolEg4Ebm-fAziMiJvjqR/view?usp=sharing 
+
+4. Running examples:
 
    __Example 1__ (in a conventional splitting where 80% MANY data points are selected as training set and complete DC data points are test set):
 
