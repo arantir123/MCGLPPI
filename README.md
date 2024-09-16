@@ -83,21 +83,21 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
    
    1) __Original data for full-atom and MARTINI2:__
       
-         https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing
+            https://drive.google.com/file/d/1o8bDAZdQg-sRKdWpEA_5jRv05l0RwyRv/view?usp=sharing
 
    2) __Original data for MARTINI3:__
 
-         https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing 
+            https://drive.google.com/file/d/1pgPsGvvT3zfvaMfmSj5COqtIUMC1m471/view?usp=sharing 
 
    3) __All dG labels for corresponding complex structures:__
      
-         PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ path 
+            PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ path 
 
 1. We also provide the corresponding pickle files for a quick start:
 
    __MARTINI2 and MARTINI3:__
 
-   https://drive.google.com/file/d/14-0QF0b8JeXUU57yMzTdTPzvsNP_ayUv/view?usp=sharing
+         https://drive.google.com/file/d/14-0QF0b8JeXUU57yMzTdTPzvsNP_ayUv/view?usp=sharing
 
 2. After the preparation of the source data for MCGLPPI, the .yaml execution scripts can be used to evaluate the model performance based on different data splitting settings. Please follow the illustration in corresponding scripts to set the hyper-parameters for evaluation configurations (the data splitting file ['index_path' argument] and whether to use the pre-trained graph encoder checkpoint ['model_checkpoint' argument] can be specified in these scripts). The running examples including training and evaluation are as follows:
 
@@ -105,17 +105,19 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    __MARTINI2:__
 
-   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml
+         python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_10CV.yaml
 
    __MARTINI3:__ 
 
-   python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml 
+         python cg3_steps/cg3_downstream_1gpu_10CV_GBT.py -c config/ppi_cg3/cg3_pdbbind_gearnet_gbt_10CV.yaml 
 
-   __Example 2__ (in a stricter overall TM-score-based splitting [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
+   __Example 2__ (in a stricter overall TM-score-based splitting
+
+   [<0.45: test set, 0.45~0.55: validation set, >0.55: training set]):
 
    __MARTINI2:__
 
-   python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_TMscore.yaml
+         python cg_steps/cg_downstream_1gpu_10CV_GBT.py -c config/ppi_cg/cg_pdbbind_gearnet_gbt_TMscore.yaml
 
     __MARTINI3:__
 
