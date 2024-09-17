@@ -91,7 +91,7 @@ __(1) dG predictions based on the PDBbind strict dimer dataset__
 
    3) __All dG labels for corresponding complex structures:__
      
-            PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/ path 
+            PDBBINDdimer_strict_index.csv in downstream_files/PDBBIND/
 
 1. We also provide the corresponding pickle files for a quick start:
 
