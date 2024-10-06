@@ -1,7 +1,7 @@
 # MCGLPPI
 ### Integration of molecular coarse-grained model into geometric representation learning framework for protein-protein complex property prediction 
 
-__The original bioRxiv version link: https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract__
+__The original bioRxiv version link: [https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract]__
 
 __The link for the accepted version will be provided soon.__
 
