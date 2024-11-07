@@ -3,7 +3,7 @@
 
 __The original bioRxiv version link: [https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract]__
 
-__The link for the accepted version will be provided soon.__
+__The accepted version link: [https://www.nature.com/articles/s41467-024-53583-w]__
 
 __Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
 * Python 3.9.18
