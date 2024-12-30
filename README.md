@@ -278,7 +278,7 @@ __(3) all dG labels for corresponding complex structures,__
 
       MAML_complete_index.csv in downstream_files/MAML/ 
 
-__(4) pre-trained CG graph encoder (in pretrained_cgmodels, using identified 45,714 3DID sample points for pre-training, below is the checkpoint name),__
+__(4) pre-trained CG graph encoder (in pretrained_cgmodels, using 45,714 (out of 50,359) 3DID sample points for pre-training, below is the checkpoint name),__
 
       cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 
