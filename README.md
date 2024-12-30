@@ -278,11 +278,11 @@ __(3) all dG labels for corresponding complex structures,__
 
       MAML_complete_index.csv in downstream_files/MAML/ 
 
-__(4) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
+__(4) pre-trained CG graph encoder (in pretrained_cgmodels, using identified 45,714 3DID sample points for pre-training, below is the checkpoint name),__
 
       cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-__(5) corresponding running script demos for a quick start.__
+__(5) corresponding running scripts for a quick start.__
 
 __Please follow the illustration in config/ppi_cg_maml/cg_maml_gearnet_reg.yaml to set the hyper-parameters for the downstream evaluation configurations.__
 
@@ -291,8 +291,6 @@ __A running example:__
 __After the environment configuration, usually dozens of minutes are needed to finish running the demo code. The evaluation results might be varying according to the actual installed virtual environment and the supporting hardware.__
 
       python cg_maml_steps/cg_downstream_1gpu_maml_reg.py -c config/ppi_cg_maml/cg_maml_gearnet_reg.yaml  
-
-__The complete MCGLPPI++ framework, including complete original data and implementation scripts, will be released upon acceptance.__
 
 
 
