@@ -74,10 +74,10 @@ class CG22_Protein(Molecule):
 
         # for the case: https://www.jianshu.com/p/c4cdf09642ca?utm_campaign=maleskine&utm_content=note&utm_medium=seo_notes&utm_source=recommendation
         # this case is caused by the conflict between atom_type and defined bead_type
-        if 'atom_type' in kwargs.keys():
+        if "atom_type" in kwargs.keys():
             # print(bead_type) # None
-            bead_type = kwargs['atom_type']
-            kwargs.pop('atom_type')
+            bead_type = kwargs["atom_type"]
+            kwargs.pop("atom_type")
             super(CG22_Protein, self).__init__(edge_list, atom_type=bead_type, bond_type=bond_type, **kwargs)
         else:
             super(CG22_Protein, self).__init__(edge_list, atom_type=bead_type, bond_type=bond_type, **kwargs)
@@ -493,7 +493,7 @@ class CG22_Protein(Molecule):
             return self.residue_mask(retain_aa_index, compact=compact, intermol_mat=contact_matrix), closest_distance
 
         else:
-            print('current protein cropping does not support proteins with chain number over two')
+            print("current protein cropping does not support proteins with chain number over two")
             raise NotImplementedError
 
     def residue_mask(self, index, compact=False, intermol_mat=None):
@@ -770,7 +770,7 @@ def cleaning_cg_pdb(cglines, pdb, AA_num_threshold=3000):
             bead_pos_list.append(row[12:16].strip())
         # a check about the non-residue atoms
         elif row[0:4] == 'ATOM' and len(resname) != 3:
-            print('Non-residue atoms:', pdb, row)
+            print("Non-residue atoms:", pdb, row)
         elif row[0:3] == 'TER':
             screened_list.append(row[0:3] + '\n')
         else:
@@ -779,7 +779,7 @@ def cleaning_cg_pdb(cglines, pdb, AA_num_threshold=3000):
     # over-large protein check
     BB_num = np.sum(np.array(bead_pos_list) == 'BB') # each residue only has one BB bead
     if BB_num > BB_num_threshold:
-        return False, 'Over-large protein {} is ignored'.format(pdb)
+        return False, "Over-large protein {} is ignored".format(pdb)
 
     return True, screened_list
 
@@ -805,7 +805,7 @@ def cleaning_cg_itp(chain_lines, pdb):
             next_row = ''
             # further check about the '#endif' tag for finding itp files which may be incomplete (should end with '#endif' tag)
             if row.strip() != '#endif':
-                print('current itp files of protein {} may be incomplete'.format(pdb))
+                print("current itp files of protein {} may be incomplete".format(pdb))
                 complete_check = False
 
         # recording AA sequence
