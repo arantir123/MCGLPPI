@@ -889,8 +889,8 @@ class EnergyDecoder(nn.Module):
     def forward(self, graph, bead_emb, mlp):
         # * here will construct edges only for energy calculation based on MARTINI vdw radii cutoff and electrostatic radii cutoff *
         # * please note that current batch AA pairs are packed together, requiring to distinguish the pairs from different complexes below *
-        node_emb = bead_emb['node_feature']
-        graph_emb = bead_emb['graph_feature']
+        node_emb = bead_emb["node_feature"]
+        graph_emb = bead_emb["graph_feature"]
 
         # * if import prompted graphs, there are some token nodes with virtual node positions and bead/atom types *
         # * in this case, these token nodes do not have specific physical meanings, which need to be ignored when calculating energy *
@@ -1106,7 +1106,7 @@ class MAML(tasks.PropertyPrediction):
                  der_cal_across_protein=False, loss_der1_ratio=100, loss_der2_ratio=100, whether_prompt=True, verbose=0):
 
         # normalization is used for regression tasks with criteria like 'mse', for further normalizing the labels based on mean and std
-        super(MAML, self).__init__(model, criterion="mse", metric=("mae", "rmse", "pearsonr"), task='binding_affinity', # weight for each task
+        super(MAML, self).__init__(model, criterion="mse", metric=("mae", "rmse", "pearsonr"), task="binding_affinity", # weight for each task
             num_mlp_layer=num_mlp_layer, normalization=normalization, num_class=1, graph_construction_model=graph_construction_model,
             mlp_batch_norm=mlp_batch_norm, mlp_dropout=mlp_dropout, verbose=verbose)
 
@@ -1318,7 +1318,7 @@ class MAML(tasks.PropertyPrediction):
 
     # re-write the logits prediction function to incorporate the cg feature generating process
     def predict(self, batch, all_loss=None, metric=None):
-        graph = batch['graph']
+        graph = batch["graph"]
 
         # graph_node_feats = functional.one_hot(torch.ones_like(graph.atom_type[:, 0]), len(graph.martini22_name2id.keys())) # for testing the importance of bead type
         graph_node_feats = functional.one_hot(graph.atom_type[:, 0], len(graph.martini22_name2id.keys()))
@@ -1364,7 +1364,7 @@ class MAML(tasks.PropertyPrediction):
 
     # ** generate graph embeddings only (for GBT-based decoders, current generated graph embeddings do not include energy information) **
     def encoder_predict(self, batch, all_loss=None, metric=None):
-        graph = batch['graph']
+        graph = batch["graph"]
         graph_node_feats = functional.one_hot(graph.atom_type[:, 0], len(graph.martini22_name2id.keys()))
         with graph.atom(): # registered the feature in the context manager
             graph.atom_feature = graph_node_feats
@@ -1481,7 +1481,7 @@ class PDBBIND(tasks.PropertyPrediction):
                  der_cal_across_protein=False, loss_der1_ratio=10, loss_der2_ratio=10, verbose=0):
 
         # normalization is used for regression tasks with criteria like 'mse', for further normalizing the labels based on mean and std
-        super(PDBBIND, self).__init__(model, criterion="mse", metric=("mae", "rmse", "pearsonr"), task='binding_affinity', # weight for each task
+        super(PDBBIND, self).__init__(model, criterion="mse", metric=("mae", "rmse", "pearsonr"), task="binding_affinity", # weight for each task
             num_mlp_layer=num_mlp_layer, normalization=normalization, num_class=1, graph_construction_model=graph_construction_model,
             mlp_batch_norm=mlp_batch_norm, mlp_dropout=mlp_dropout, verbose=verbose)
 
@@ -1656,7 +1656,7 @@ class PDBBIND(tasks.PropertyPrediction):
     # * re-write the logits prediction function to incorporate the cg feature generating process *
     # * the final protein graph to be sent into the encoder will be generated inside *
     def predict_only_training(self, batch, all_loss=None, metric=None):
-        graph = batch['graph']
+        graph = batch["graph"]
 
         # graph_node_feats = functional.one_hot(torch.ones_like(graph.atom_type[:, 0]), len(graph.martini22_name2id.keys())) # test the importance of bead type
         graph_node_feats = functional.one_hot(graph.atom_type[:, 0], len(graph.martini22_name2id.keys()))
@@ -1696,7 +1696,7 @@ class PDBBIND(tasks.PropertyPrediction):
 
     # re-write the logits prediction function to incorporate the cg feature generating process
     def predict(self, batch, all_loss=None, metric=None):
-        graph = batch['graph']
+        graph = batch["graph"]
 
         # graph_node_feats = functional.one_hot(torch.ones_like(graph.atom_type[:, 0]), len(graph.martini22_name2id.keys())) # test the importance of bead type
         graph_node_feats = functional.one_hot(graph.atom_type[:, 0], len(graph.martini22_name2id.keys()))
@@ -1739,7 +1739,7 @@ class PDBBIND(tasks.PropertyPrediction):
 
     # * generate graph embeddings only (current generated graph embeddings do not include energy information) *
     def encoder_predict(self, batch, all_loss=None, metric=None):
-        graph = batch['graph']
+        graph = batch["graph"]
         graph_node_feats = functional.one_hot(graph.atom_type[:, 0], len(graph.martini22_name2id.keys()))
         with graph.atom(): # registered the feature in the context manager
             graph.atom_feature = graph_node_feats
@@ -1858,7 +1858,7 @@ class STANDARD(PDBBIND, tasks.PropertyPrediction):
             der_cal_across_protein=der_cal_across_protein, loss_der1_ratio=loss_der1_ratio, loss_der2_ratio=loss_der2_ratio, verbose=verbose)
 
         # 2. initialize the PropertyPrediction wrapper used for current *regression* task
-        tasks.PropertyPrediction.__init__(self, model, criterion="mse", metric=("mae", "rmse", "pearsonr"), task='binding_affinity',
+        tasks.PropertyPrediction.__init__(self, model, criterion="mse", metric=("mae", "rmse", "pearsonr"), task="binding_affinity",
             num_mlp_layer=num_mlp_layer, normalization=normalization, num_class=1, graph_construction_model=graph_construction_model,
             mlp_batch_norm=mlp_batch_norm, mlp_dropout=mlp_dropout, verbose=verbose)
 
