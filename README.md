@@ -264,7 +264,7 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 __We have provided (for how to generate the CG protein complex files as the basic model input, please check the MCGLPPI illustration above):__
 
-__(1) our curated PPI dG dataset (including original data for full-atom and MARTINI2),__
+__(1) our curated larger PPI dG dataset (including original data for full-atom and MARTINI2),__
 
 This dataset contains the selected PPI structure samples from 1) SKEMPI 2.0 (https://life.bsc.es/pid/skempi2/), 2) PDBbind v2020 (http://www.pdbbind.org.cn/), 3) ATLAS (https://pubmed.ncbi.nlm.nih.gov/28160322/), and 4) Panagiotis et al. databases (https://pubs.acs.org/doi/full/10.1021/pr9009854).
 
@@ -274,11 +274,15 @@ __(2) our pre-processed CG source data pickle file (based on MARTINI2, in the fo
 
       https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
-__(3) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
+__(3) all dG labels for corresponding complex structures,__
+
+      MAML_complete_index.csv in downstream_files/MAML/ 
+
+__(4) pre-trained CG graph encoder (in pretrained_cgmodels, below is the checkpoint name),__
 
       cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 
-__(4) corresponding running script demos for a quick start.__ 
+__(5) corresponding running script demos for a quick start.__
 
 __Please follow the illustration in config/ppi_cg_maml/cg_maml_gearnet_reg.yaml to set the hyper-parameters for the downstream evaluation configurations.__
 
