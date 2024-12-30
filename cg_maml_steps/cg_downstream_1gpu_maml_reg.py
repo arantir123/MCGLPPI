@@ -366,12 +366,12 @@ def MAML_zero_shot_test(dataset, model, iterations_dict=None, max_time=None, dev
             if iterations_dict is not None:
                 current_task = iterations_list[batch_id]
                 if current_task not in metric_per_task.keys():
-                    metric_per_task[current_task] = {'pred': [], 'target': []}
-                    metric_per_task[current_task]['pred'].append(pred)
-                    metric_per_task[current_task]['target'].append(target)
+                    metric_per_task[current_task] = {"pred": [], "target": []}
+                    metric_per_task[current_task]["pred"].append(pred)
+                    metric_per_task[current_task]["target"].append(target)
                 else:
-                    metric_per_task[current_task]['pred'].append(pred)
-                    metric_per_task[current_task]['target'].append(target)
+                    metric_per_task[current_task]["pred"].append(pred)
+                    metric_per_task[current_task]["target"].append(target)
 
         except RuntimeError as e:
             if "CUDA out of memory" not in str(e): raise (e)
@@ -396,8 +396,8 @@ def MAML_zero_shot_test(dataset, model, iterations_dict=None, max_time=None, dev
     if iterations_dict is not None:
         task_metric = {}
         for task in all_tasks:
-            pred = utils.cat(metric_per_task[task]['pred'])
-            target = utils.cat(metric_per_task[task]['target'])
+            pred = utils.cat(metric_per_task[task]["pred"])
+            target = utils.cat(metric_per_task[task]["target"])
             current_task_metric = model.task.evaluate(pred, target)
             task_metric[task] = {eval: round(float(current_task_metric[eval]), 4) for eval in current_task_metric}
 
