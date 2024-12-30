@@ -26,7 +26,7 @@ dataset:
 
   k_shot: 5 # k_shot for the S set of meta-training (used in Sampler), should be smaller than the minimum task sample number among training tasks
   k_query: 10 # k_query for the Q set of meta-training, used in Sampler, determining how many samples will be used for each Q set
-  val_shot: 10 # val_shot for meta-test, used in Sampler, in zero-shot setting, determining how many samples will be checked per batch
+  val_shot: 10 # basic few-shot sample number for meta-test (please also check 'few_shot_num' argument), used in Sampler, in zero-shot setting, determining how many samples are checked per batch
   
   random_shuffle_seed: 128 # provide a temporary random seed to control the sample output order in test set (None: original order based on names)
   
@@ -137,7 +137,7 @@ model_checkpoint: /pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256
 train:
   fix_encoder: True
   fix_encoder_few_finetuning: True # whether fix the encoder during the fine-tuning phase under few-shot case
-  num_epoch: 12 # 5/*12*/20/35/40, for specifying the MAML outer loop number
+  num_epoch: 12 # for specifying the MAML outer loop number
   scheduler_pos: epoch # 'epoch'/'batch', controlling the scheduler update frequency
 
   task_lr: 1.0e-4 # define the initial learning rate of MAML inner loops at the beginning of meta-training
@@ -167,5 +167,4 @@ train:
   eval_metric: pearsonr [binding_affinity]
 
 # extra information attached to the saved model name
-# extra: subset # for GearNet-identified subset testing
 extra: 0 # for common testing case
