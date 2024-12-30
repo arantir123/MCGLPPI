@@ -605,16 +605,20 @@ if __name__ == "__main__":
         print("all used sample list:", all_used_sample_list)
         print("all sample wo finetuning:", all_sample_wo_finetuning)
 
+    exact_train_start_time = time.time()
     # ** for the evaluation results reported inside, it is based on the model trained on the both meta-training samples and further fine-tuning samples **
     best_train_epoch, test_eval_on_best_train_epoch, meta_train_sample_list = train(cfg.train, maml_task, optimizer, scheduler, train_loader, test_loader,
             device, model_save_name, task_path, model_path, cfg.engine["batch_size"], cfg.train.get("early_stop"), test_mode=test_mode, eval_mode="min",
             few_weight_decay=cfg.optimizer.get("weight_decay"))
+    exact_train_end_time = time.time()
 
     # * check the test results based on the best train epoch and the last epoch separately and independently *
     # * based on current logic, no matter which 'model_save_mode' is used, the 'best train epoch' and 'last epoch' models will be saved *
     # * the difference is that the logic to save the 'best train epoch' model could be different *
     # 1) on the best epoch
     maml_task.load_state_dict(torch.load(os.path.join(model_path, "best_train_" + model_save_name)))
+
+    exact_infer_start_time = time.time()
     # best_epoch_wrapper = deepcopy(maml_task)
     if test_mode == "zero":
         maml_task.eval()
@@ -627,6 +631,7 @@ if __name__ == "__main__":
             test_loader, maml_task, iterations_dict=cfg.train.test_iterations_dict, few_shot_num=cfg.train.get("few_shot_num"),
             few_epoch=cfg.train.get("few_epoch"), few_lr=cfg.train.get("few_lr"), few_weight_decay=cfg.optimizer.get("weight_decay"),
             fix_encoder_few_finetuning=cfg.train.get("fix_encoder_few_finetuning"), device=device)
+    exact_infer_end_time = time.time()
 
     print("\nINDEPENDENT {}-shot overall test metric on the best epoch {}:\n".format(test_mode, best_train_epoch), total_metric_best_epoch)
     print("\nCORRESPONDING task-wise metric on the best epoch {}:".format(best_train_epoch))
@@ -659,6 +664,8 @@ if __name__ == "__main__":
     t1 = time.time()
     print(f"\ncurrent model name for storage is: {model_save_name}\n")
     print(f"\ntotal elapsed time of the downstream training and required inference processes: {t1 - t0:.4f}\n")
+    print(f"\nexact elapsed time of the downstream training processes: {exact_train_end_time - exact_train_start_time:.4f}\n")
+    print(f"\nexact elapsed time of the downstream inference processes: {exact_infer_end_time - exact_infer_start_time:.4f}\n")
 
     # automatically store all samples to be trained/tested in meta-training and meta-test in *original sample order*
     if test_mode == "zero":
