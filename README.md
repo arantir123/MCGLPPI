@@ -264,13 +264,13 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 __We have provided (for how to generate the CG protein complex files as the basic model input, please check the MCGLPPI illustration above):__
 
-__(1) our curated PPI dG dataset (including orginal data for full-atom and MARTINI2),__
+__(1) our curated PPI dG dataset (including original data for full-atom and MARTINI2),__
 
 This dataset contains the selected PPI structure samples from 1) SKEMPI 2.0 (https://life.bsc.es/pid/skempi2/), 2) PDBbind v2020 (http://www.pdbbind.org.cn/), 3) ATLAS (https://pubmed.ncbi.nlm.nih.gov/28160322/), and 4) Panagiotis et al. databases (https://pubs.acs.org/doi/full/10.1021/pr9009854).
 
       https://drive.google.com/file/d/1j7kj14wLFpACixuqjCIf1ztErK4sULML/view?usp=sharing
    
-__(2) our pre-processed CG source data pickle file (in the following link),__
+__(2) our pre-processed CG source data pickle file (based on MARTINI2, in the following link),__
 
       https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
