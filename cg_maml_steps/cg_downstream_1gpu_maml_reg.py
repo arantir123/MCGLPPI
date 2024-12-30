@@ -673,6 +673,10 @@ if __name__ == "__main__":
         total_sample_list = {"train": [], "test": []}
         total_sample_list["train"].extend(meta_train_sample_list)
 
+        # meta_train_sample_list: storing all meta-training samples
+        # fewshot_train_sample_list: storing all further fine-tuning samples in fine-tuning (on top of the meta-training samples)
+        # fewshot_test_sample_list: storing all independent test samples in fine-tuning
+
         for key in fewshot_test_sample_list:
             few_sample = fewshot_test_sample_list[key]
             print("independent test sample number for meta-test task {} in few-shot setting: {}".format(key, len(few_sample)))
