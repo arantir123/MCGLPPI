@@ -1,5 +1,5 @@
 # MCGLPPI
-### Integration of molecular coarse-grained model into geometric representation learning framework for protein-protein complex property prediction 
+### Integration of molecular coarse-grained model into geometric representation learning framework for protein-protein complex property prediction ###
 
 __The original bioRxiv version link: [https://www.biorxiv.org/content/10.1101/2024.03.14.585015v1.abstract]__
 
@@ -248,7 +248,9 @@ __After the environment configuration, usually dozens of minutes are needed to f
 __Please note that some of the used data subsets are small due to the limitation of available complex structures and their experimental labels, the evaluation results on these subsets might vary based on different hardwares and environments. Nevertheless, the better trade-off between the computational overhead and chemical-plausible interaction descriptions within complexes can be guaranteed. Please check the original manuscipt link for complete evaluation result reports.__
 
 # MCGLPPI++
-### The demo code of implementation of MCGLPPI++
+### Meta-learning enables complex cluster-specific few-shot binding affinity prediction for protein-protein interactions ###
+
+__The accepted version link will be provided very soon.__
 
 __Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
 * Python 3.9.18
@@ -260,7 +262,7 @@ __Basic Environment Configuation (Windows or Linux, the specific installation ti
 
 ## Quick start ##
 
-__We have provided:__
+__We have provided (for how to generate the CG protein complex files as the basic model input, please check the MCGLPPI illustration above):__
 
 __(1) our pre-processed CG source data pickle file (in the following link),__
 
