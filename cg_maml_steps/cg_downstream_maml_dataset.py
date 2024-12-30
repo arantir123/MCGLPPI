@@ -110,7 +110,7 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
 
         if verbose:
             # generating progress bar when iterating it with specified info
-            cg_files = tqdm(cg_files, 'constructing proteins from CG files')
+            cg_files = tqdm(cg_files, "constructing proteins from CG files")
         # read and process each cg protein one by one
         for i, cg_file in enumerate(cg_files):
             # for processing specific sample via its name
@@ -139,25 +139,25 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
                     protein.label = torch.tensor(self.label_dict[cg_file_key])
                 else:
                     protein.label = torch.tensor(float('-inf'))
-                    print('protein {} is assigned an -inf label because its label is not in the loaded label dictionary'.format(cg_file_key))
+                    print("protein {} is assigned an -inf label because its label is not in the loaded label dictionary".format(cg_file_key))
 
             self.data.append(protein) # storing CGProtein class
             self.pdb_files.append(cg_file) # original cg file local locations, e.g., /cg_demo_martini22/1brs
             self.sequences.append(protein.aa_sequence if protein else None) # storing str protein sequences
 
             if i % 1000 == 0:
-                print('{} coarse-grained proteins have been parsed'.format(i))
+                print("{} coarse-grained proteins have been parsed".format(i))
 
         # save the maybe_incomplete cg protein list into original source data folder
         if len(self.maybe_incomplete) > 0:
             # put the check result into the original protein sample storage folder, F:/UOB/External Dataset/PDBbind_source/pdbbind_dimer_strict
             head_path = os.path.split(cg_file)[0]
-            with open(os.path.join(head_path, "maybe_incomplete_itp.txt"), "w") as f:
+            with open(os.path.join(head_path, "maybe_incomplete_itp.txt"), 'w') as f:
                 f.writelines([line + '\n' for line in self.maybe_incomplete])
 
         if len(self.must_incomplete) > 0:
             head_path = os.path.split(cg_file)[0]
-            with open(os.path.join(head_path, "must_incomplete_itp.txt"), "w") as f:
+            with open(os.path.join(head_path, "must_incomplete_itp.txt"), 'w') as f:
                 f.writelines([line + '\n' for line in self.must_incomplete])
 
     def get_item(self, index):
@@ -179,15 +179,15 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
             assert current_res_num > 0, "protein {} is empty after the cropping with contact_threshold = {}, closest contact distance = {}".\
                 format(protein_name, self.contact_threshold, closest_contact_distance)
 
-        if hasattr(protein, 'residue_feature'): # default: False
+        if hasattr(protein, "residue_feature"): # default: False
             with protein.residue():
                 protein.residue_feature = protein.residue_feature.to_dense()
 
         # the way of generating a batch of data to be fed into the model in every epoch
-        item = {'graph': protein}
+        item = {"graph": protein}
         item[self.task_tag] = protein_label
         # adding the support of providing protein name along with the CG graph
-        item['name'] = protein_name
+        item["name"] = protein_name
         if self.transform: # loaded in self.load_pickle or self.load_cgs via 'kwargs'
             item = self.transform(item)
 
@@ -195,9 +195,9 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
         # * the items will be sent to Dataloader to be packed together as the batch data *
         return item
 
-    def create_labels(self, label_path, label_col_name='binding_free_energy', label_upper=None, label_lower=None):
+    def create_labels(self, label_path, label_col_name="binding_free_energy", label_upper=None, label_lower=None):
         raw_labels = pd.read_csv(label_path)
-        pdb_names, selected_labels = raw_labels['pdb_code'], raw_labels[label_col_name]
+        pdb_names, selected_labels = raw_labels["pdb_code"], raw_labels[label_col_name]
 
         # label restriction check
         if label_upper:
@@ -227,7 +227,7 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
 
         # * generate absolute sample ids for each set *
         # print(self.split_list) # {'name': array(['1a22', '1acb', '1ak4', ..., '6s29', '6saz', '6umt']), 'cluster': array([1, 3, 3, ..., 1, 1, 3])}
-        protein_name, cluster_id = self.split_list['name'], self.split_list['cluster'] # obtain the task assignment for all involved numbers
+        protein_name, cluster_id = self.split_list["name"], self.split_list["cluster"] # obtain the task assignment for all involved numbers
         # * make protein_name and cluster_id also strictly follow the sorted order of protein names *
         protein_name_order = np.argsort(protein_name)
         protein_name = protein_name[protein_name_order]
@@ -254,7 +254,7 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
             # all logics use 'if', in case that some samples belong to multiple sets (in certain settings from retrieved splitting files)
             if pdb_file_ in train_protein_name:
                 # examine the order consistency in self.pdb_files and train_protein_name (based on the same protein name order)
-                assert pdb_file_ == train_protein_name[train_counter], 'There exists protein name order inconsistency between pdb_files and train_protein_name.'
+                assert pdb_file_ == train_protein_name[train_counter], "There exists protein name order inconsistency between pdb_files and train_protein_name."
                 train_pdb_files.append(pdb_file)
                 train_data.append(structure)
                 train_sequences.append(sequence)
@@ -269,7 +269,7 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
                 train_counter += 1
 
             if pdb_file_ in test_protein_name:
-                assert pdb_file_ == test_protein_name[test_counter], 'There exists protein name order inconsistency between pdb_files and test_protein_name.'
+                assert pdb_file_ == test_protein_name[test_counter], "There exists protein name order inconsistency between pdb_files and test_protein_name."
                 test_pdb_files.append(pdb_file)
                 test_data.append(structure)
                 test_sequences.append(sequence)
@@ -288,7 +288,7 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
 
         # if the protein order in complete dataset and in training/test set is consistent, the following assert will also pass
         assert train_task_assignment == train_cluster_id.tolist() and test_task_assignment == test_cluster_id.tolist(), \
-            'There still exists inconsistency in protein name order of each allocated set.'
+            "There still exists inconsistency in protein name order of each allocated set."
 
         # arrange the data following the order of training, validation, and test
         self.pdb_files = train_pdb_files + test_pdb_files
@@ -298,7 +298,7 @@ class MAMLDataset(data.ProteinDataset, PPIDataset):
         self.num_samples = [len(train_pdb_files), len(test_pdb_files)]
         self.train_task2sampid = train_task2sampid
         self.test_task2sampid = test_task2sampid
-        print('number of samples in the training and test sets: {}, {}'.format(self.num_samples[0], self.num_samples[-1]))
+        print("number of samples in the training and test sets: {}, {}".format(self.num_samples[0], self.num_samples[-1]))
 
     @property
     def tasks(self):
@@ -341,7 +341,7 @@ class STANDARDDataset(MAMLDataset):
         pkl_file = os.path.join(self.output_path, self.pickle_name)
         if not os.path.exists(self.output_path):  # output pickle storage path
             os.makedirs(self.output_path)
-        print('current output path for outputting processed CG pickle data file:', pkl_file)
+        print("current output path for outputting processed CG pickle data file:", pkl_file)
 
         self.label_dict = self.create_labels(label_path=self.label_path, label_col_name=self.label_col_name)
         # load data splitting, in current setting, what usually retrieves is the splitting generated from corresponding meta-learning setting for a fair comparison
@@ -466,7 +466,7 @@ class STANDARD2STEPDataset(MAMLDataset):
         pkl_file = os.path.join(self.output_path, self.pickle_name)
         if not os.path.exists(self.output_path): # output pickle storage path
             os.makedirs(self.output_path)
-        print('current output path for outputting processed CG pickle data file:', pkl_file)
+        print("current output path for outputting processed CG pickle data file:", pkl_file)
 
         self.label_dict = self.create_labels(label_path=self.label_path, label_col_name=self.label_col_name)
 
