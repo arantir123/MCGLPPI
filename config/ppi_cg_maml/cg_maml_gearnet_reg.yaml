@@ -4,21 +4,20 @@ dataset:
   class: MAMLDataset
 
   # the path for storing the downstream source data
-  data_path: /maml/ # MAML path in server
+  data_path: /maml/ 
 
   # the path for storing the output processed pickle file
   output_path: /maml/
 
   # the path for storing the index of dataset splitting
-  index_path: /downstream_files/metatrain_tcrpmhc_seed-0_crit-ss_cnum-10.pkl # ss
+  index_path: /downstream_files/metatrain_tcrpmhc_seed-0_crit-ss_cnum-10.pkl # ss splitting
 
   # the path for storing all label information of current dataset
   label_path: /downstream_files/MAML/MAML_complete_index.csv
 
-  # indicating current used data source pickle file (creating it if it does not exist)
+  # indicating currently used data source pickle file (creating it if it does not exist from data_path)
   pickle_name: cg_complete_maml_energyinject.pkl.gz
 
-  # * currently no transform functions are needed, the node and edge features can be generated in task.forward and CG22_GraphConstruction separately *
   label_col_name: binding_free_energy # choose the specified column in label file as the final used label
   cropping_threshold: 10 # the cropping function is performed on-the-fly
   contact_threshold: 8.5 # threshold for determining contact residues based on inter-BB distance
@@ -26,9 +25,9 @@ dataset:
 
   k_shot: 5 # k_shot for the S set of meta-training (used in Sampler), should be smaller than the minimum task sample number among training tasks
   k_query: 10 # k_query for the Q set of meta-training, used in Sampler, determining how many samples will be used for each Q set
-  val_shot: 10 # basic few-shot sample number for meta-test (please also check 'few_shot_num' argument), used in Sampler, in zero-shot setting, determining how many samples are checked per batch
+  val_shot: 10 # basic few-shot sample number for meta-test (please also check 'few_shot_num' argument below), used in Sampler, in zero-shot setting, determining how many samples are checked per batch
   
-  random_shuffle_seed: 128 # provide a temporary random seed to control the sample output order in test set (None: original order based on names)
+  random_shuffle_seed: 128 # provide a temporary random seed to control the sample output order in test set (None: original order based on sample names)
   
   # * if unified_sample_num exists, Train_balanced_FewshotBatchSampler which balances sample number of each task is used (otherwise: no sample balance) *
   # * when it exists, if set it to None, the average sample number over all meta-training tasks is used otherwise the specified int value *
@@ -41,7 +40,7 @@ dataset:
 task:
   class: MAML
   angle_enhance: True
-  normalization: True # label normalization only for regression tasks (valid for both MLP and GBT-based decoder), default: True
+  normalization: True # label normalization only for regression tasks, default: True
 
   # the hyperparameters for MLP-based decoder
   num_mlp_layer: 3
@@ -125,14 +124,13 @@ engine:
   num_worker: 0
 
 # model_checkpoint: {{ ckpt }}
-# diffusion denoising pretraining:
-# 1. pure encoder checkpoint
+# 1. pure encoder checkpoint (based on diffusion denoising pretraining)
 # model_checkpoint: /pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_ls3did_fepoch200_bbfeatsFalse_miFalse.pth
 model_checkpoint: /pretrained_cgmodels/cgdiff_seed0_gamma0.2_bs64_epoch50_dim256_length150_radius5_extra_step2_0_l3did_fepoch200_bbfeatsFalse_miFalse.pth
 # 2. checkpoint after supervised learning (including encoder and decoder)
 # whether_from_supervise: True
 # only_supervise_encoder: True # load the pre-trained encoder through supervised learning, and initialize a new decoder to be learnt from meta-learning for further fine-tuning 
-# model_checkpoint: /downstream_files/MAML/downstream_model_storage/best_train_standard_seed0_bs64_epoch20_dim256_radius5_2024_07_16__00_25_56_extra_0.pth
+# model_checkpoint: /downstream_files/MAML/downstream_model_storage/best_train_standard_seed0_bs64_epoch20_dim256_radius5_extra_0.pth # your checkpoint from supervised training
 
 train:
   fix_encoder: True
@@ -141,16 +139,16 @@ train:
   scheduler_pos: epoch # 'epoch'/'batch', controlling the scheduler update frequency
 
   task_lr: 1.0e-4 # define the initial learning rate of MAML inner loops at the beginning of meta-training
-  num_inner_steps: 5 # 5, for specifying the MAML inner loop number for each task in a batch
+  num_inner_steps: 5 # for specifying the MAML inner loop number for each task in a batch, default: 5
   
   maml_param_optim: True # whether also to optimize the extra parameters provided in the MAML wrapper
-  weighted_task_comb: False # whether to weighted combine each task loss using the Attention module (otherwise: direct sum)
+  weighted_task_comb: False # whether to weighted combine each task loss using the Attention module (False: direct sum)
   model_save_mode: direct # if set to 'direct', save the model in the last epoch specified
 
-  # 'zero' or 'few', representing using the zero-shot and few-shot test mode separately, for few-shot,
-  # argument 'val_shot' will be used to control the used basic test sample number for fine-tuning,
-  # otherwise (zero-shot) it just controls the sample number for each (no gradient) test batch
-  # for zero-shot, all samples in test tasks will be tested, while for few-shot, part of them will be used for fine-tuning on corresponding tasks
+  # 'zero' or 'few', representing using the zero-shot and few-shot test modes separately, for few-shot,
+  # argument 'val_shot' will be used to control the used basic (few-shot) test sample number for fine-tuning,
+  # otherwise, (in zero-shot) it just controls the sample number for each (no gradient) test batch
+  # for zero-shot, all samples in test tasks will be tested, while for few-shot, part of them will be used for fine-tuning in corresponding tasks
   test_mode: few
   # the following arguments are available under the test_mode 'few'
   few_shot_num: 1 # controlling how many former 'val_shot'-based batches for each test task will be used for few-shot fine-tuning
@@ -163,7 +161,6 @@ train:
 
   # the specified metric controlling the best model saved based on best-val
   # {'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]')}
-  # eval_metric: root mean squared error [binding_affinity]
   eval_metric: pearsonr [binding_affinity]
 
 # extra information attached to the saved model name
