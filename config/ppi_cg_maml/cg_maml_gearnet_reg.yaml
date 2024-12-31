@@ -159,7 +159,6 @@ train:
   # train_time: 120
   # test_time: 100
 
-  # the specified metric controlling the best model saved based on best-val
   # {'mean absolute error [binding_affinity]', 'root mean squared error [binding_affinity]', 'pearsonr [binding_affinity]')}
   eval_metric: pearsonr [binding_affinity]
 
