@@ -274,7 +274,7 @@ __(2) our pre-processed CG source data pickle file (based on MARTINI2),__
 
       https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
-__(3) all dG labels for corresponding complex structures,__
+__(3) all dG labels for corresponding complex structures (including the pre-calculated training cluster splitting features),__
 
       MAML_complete_index.csv in downstream_files/MAML/ 
 
