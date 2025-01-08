@@ -250,7 +250,7 @@ __Please note that some of the used data subsets are small due to the limitation
 # MCGLPPI++
 ### Meta-learning enables complex cluster-specific few-shot binding affinity prediction for protein-protein interactions ###
 
-__The accepted version link will be provided very soon.__
+__The accepted version link: [https://pubs.acs.org/doi/10.1021/acs.jcim.4c01607]__
 
 __Basic Environment Configuation (Windows or Linux, the specific installation time depends on your system configuration):__
 * Python 3.9.18
@@ -274,7 +274,7 @@ __(2) our pre-processed CG source data pickle file (based on MARTINI2),__
 
       https://drive.google.com/file/d/1NpgCtAmIcyiUjjbcfq7uSfGymjQMR-IK/view?usp=sharing
 
-__(3) all dG labels for corresponding complex structures (including the pre-calculated training cluster splitting features),__
+__(3) all dG labels for corresponding complex structures (including the pre-calculated original training cluster splitting features),__
 
       MAML_complete_index.csv in downstream_files/MAML/ 
 
